@@ -48,14 +48,16 @@ def simulate_downpayment_graph(balance, rate, min_payment, term_months):
     r = rate / 100 / 12  # Monthly interest rate
     months = term_months
     balance_history = [balance]
+    remaining_balance_history = [balance]
 
     for month in range(months):
         interest = balance * r  # Calculate monthly interest
         principal = min_payment - interest  # Subtract interest from payment to calculate principal
         balance = max(0, balance - principal)  # Reduce balance by principal
         balance_history.append(balance)
+        remaining_balance_history.append(balance)
     
-    return balance_history
+    return remaining_balance_history
 
 # Run simulation when button is clicked
 if st.button("Run Simulation"):
@@ -75,11 +77,22 @@ if st.button("Run Simulation"):
 
     # Plot the simulated downpayment graph (loan balance over time)
     fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plot loan balance decrease over time
     ax.plot(balance_history, label=f"Loan Payoff: {name} (${balance:,.2f} @ {interest_rate}%)")
     ax.set_title("Simulated Loan Downpayment Over Time")
     ax.set_xlabel("Months")
     ax.set_ylabel("Remaining Balance ($)")
+
+    # Add data labels every 6 months on the graph
+    for month in range(0, loan_term_months + 1, 6):  # Adding tooltips every 6 months
+        ax.annotate(f"${balance_history[month]:,.2f}", 
+                    (month, balance_history[month]),
+                    textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
+
+    # Add grid and legend
     ax.grid(True)
     ax.legend()
-    
+
+    # Display graph
     st.pyplot(fig)
