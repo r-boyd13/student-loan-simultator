@@ -5,12 +5,8 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-# Set page configuration to make the sidebar collapsible
+# Set page configuration to use wide layout with no sidebar
 st.set_page_config(page_title="Student Loan Payoff Simulator", layout="wide")
-
-# Add a button to toggle sidebar visibility
-if st.button("Toggle Sidebar"):
-    st.sidebar.empty()  # This will hide the sidebar
 
 # Title and Description
 st.title("🎓 Student Loan Payoff Simulator")
@@ -23,7 +19,7 @@ This tool helps you estimate your student loan repayment schedule based on your 
 - A graph illustrating the impact of making extra payments
 """)
 
-# Loan input fields in the main content area instead of the sidebar
+# Loan input fields directly in the main content area
 st.subheader("Enter Loan Details")
 name = st.text_input("Name of Loan", value="Loan 1", help="Provide a name for your loan (e.g., 'Student Loan 1')")
 balance = st.number_input("Loan Balance ($)", min_value=0, value=20000, help="Total amount owed on the loan.")
