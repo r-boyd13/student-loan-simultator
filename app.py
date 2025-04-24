@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 # Set page configuration to use wide layout with no sidebar
@@ -19,15 +19,13 @@ This tool helps you estimate your student loan repayment schedule based on your 
 - A graph illustrating the impact of making extra payments
 """)
 
-# Create a container with a max width
-with st.container():
-    # Loan input fields directly in the main content area
-    st.subheader("Enter Loan Details")
-    name = st.text_input("Name of Loan", value="Loan 1", help="Provide a name for your loan (e.g., 'Student Loan 1')")
-    balance = st.number_input("Loan Balance ($)", min_value=0, value=20000, help="Total amount owed on the loan.")
-    interest_rate = st.number_input("Interest Rate (%)", min_value=0.0, value=6.54, help="Annual interest rate of your loan.")
-    loan_term_months = st.number_input("Loan Term (Months)", min_value=1, max_value=360, value=120, help="Loan term in months.")
-    extra_payment = st.number_input("Extra Payment ($)", min_value=0, value=0, help="Monthly extra payment towards your loan.")
+# Loan input fields directly in the main content area
+st.subheader("Enter Loan Details")
+name = st.text_input("Name of Loan", value="Loan 1", help="Provide a name for your loan (e.g., 'Student Loan 1')")
+balance = st.number_input("Loan Balance ($)", min_value=0, value=20000, help="Total amount owed on the loan.")
+interest_rate = st.number_input("Interest Rate (%)", min_value=0.0, value=6.54, help="Annual interest rate of your loan.")
+loan_term_months = st.number_input("Loan Term (Months)", min_value=1, max_value=360, value=120, help="Loan term in months.")
+extra_payment = st.number_input("Extra Payment ($)", min_value=0, value=0, help="Monthly extra payment towards your loan.")
 
 # Function to calculate minimum payment
 def calculate_min_payment(balance, rate, term_months):
@@ -76,17 +74,32 @@ def calculate_amortization(balance, rate, term_months, extra_payment=0):
 def calculate_amortization_no_extra(balance, rate, term_months):
     return calculate_amortization(balance, rate, term_months, extra_payment=0)
 
+# Function to calculate estimated payoff date
+def calculate_payoff_date(months_taken):
+    start_date = datetime.today()
+    payoff_date = start_date + relativedelta(months=months_taken)
+    return payoff_date.strftime('%m-%d-%Y')
+
 # Progress Bar and Spinner for loading data
 with st.spinner("Calculating your loan details..."):
     loan_data, total_payment, final_balance, months_taken = calculate_amortization(balance, interest_rate, loan_term_months, extra_payment)
 
+    # Display the estimated payoff date above the amortization schedule
+    payoff_date = calculate_payoff_date(months_taken)
+    st.markdown(f"### Your loan will be fully paid off on **{payoff_date}**.")
+
+    # Display the key loan statistics
+    st.markdown(f"### Minimum Monthly Payment: **${total_payment:,.2f}**")
+    total_interest_paid = loan_data['Interest Paid'].sum()
+    total_principal_paid = loan_data['Principal Paid'].sum()
+    total_paid = total_principal_paid + total_interest_paid
+    st.markdown(f"### Total Interest Paid: **${total_interest_paid:,.2f}**")
+    st.markdown(f"### Total Principal Paid: **${total_principal_paid:,.2f}**")
+    st.markdown(f"### Total Payments: **${total_paid:,.2f}**")
+
     # Display the table for the loan with extra payments
     st.subheader(f"Loan Amortization Schedule for {name}")
     st.write(loan_data)
-
-    # Display total payment and final balance
-    st.markdown(f"### Total Payment: **${total_payment:,.2f}** per month")
-    st.markdown(f"### Final Balance after {len(loan_data)} months: **${final_balance:,.2f}**")
 
     # Calculate amortization without extra payments for comparison
     loan_data_no_extra, _, _, months_taken_no_extra = calculate_amortization_no_extra(balance, interest_rate, loan_term_months)
