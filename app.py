@@ -73,102 +73,38 @@ if st.button("Run Simulation"):
     payoff_date = current_date + relativedelta(months=loan_term_months)
     payoff_date_str = payoff_date.strftime('%m-%d-%Y')
 
-    # Display results for the minimum payment
+    # Display results
     st.write(f"**Minimum Monthly Payment**: ${min_payment:.2f}")
     st.write(f"**Loan Payoff Date**: {payoff_date_str}")
     st.write(f"**Total Payments**: ${min_payment * loan_term_months:,.2f}")
     st.write(f"**Total Principal Paid**: ${total_principal:,.2f}")
     st.write(f"**Total Interest Paid**: ${total_interest:,.2f}")
 
-    # User input for extra monthly payment
-    extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0.0, value=0.0)
+    # Display amortization schedule as a table
+    amortization_df = pd.DataFrame(amortization_schedule)
+    st.subheader("📊 Amortization Schedule")
+    st.write(amortization_df)
 
-    # New monthly payment with extra payment
-    new_payment = min_payment + extra_payment
+    # Plot the simulated downpayment graph (loan balance over time)
+    fig, ax = plt.subplots(figsize=(10, 6))
 
-    # Simulate loan payoff with the new monthly payment
-    new_amortization_schedule, new_total_interest, new_total_principal = simulate_amortization_schedule(balance, interest_rate, new_payment, loan_term_months)
-    new_balance_history = simulate_downpayment_graph(balance, interest_rate, new_payment, loan_term_months)
+    ax.plot(balance_history, label=f"Loan Payoff: {name} (${balance:,.2f} @ {interest_rate}%)")
 
-    # New payoff date based on increased payment
-    new_payoff_date = current_date + relativedelta(months=len(new_balance_history) - 1)
-    new_payoff_date_str = new_payoff_date.strftime('%m-%d-%Y')
+    # Add total remaining balance on the graph
+    ax.set_title("Simulated Loan Downpayment Over Time")
+    ax.set_xlabel("Months")
+    ax.set_ylabel("Remaining Balance ($)")
+    ax.legend()
 
-    # Display results with the new payment
-    st.subheader("📊 Results with Extra Payment")
-    st.write(f"**New Monthly Payment**: ${new_payment:.2f}")
-    st.write(f"**New Loan Payoff Date**: {new_payoff_date_str}")
-    st.write(f"**Total Payments**: ${new_payment * len(new_balance_history):,.2f}")
-    st.write(f"**Total Principal Paid**: ${new_total_principal:,.2f}")
-    st.write(f"**Total Interest Paid**: ${new_total_interest:,.2f}")
+    # Customize the appearance of the graph
+    ax.grid(True)
 
-    # Display amortization schedule as a table for the increased payment
-    new_amortization_df = pd.DataFrame(new_amortization_schedule)
-    st.subheader("📊 Amortization Schedule with Extra Payments")
-    st.write(new_amortization_df)
-
-    # Create interactive graph using Plotly
-    fig = go.Figure()
-
-    # Plot loan balance decrease over time with both payment scenarios
-    fig.add_trace(go.Scatter(
-        x=list(range(loan_term_months + 1)),  # X-axis for months
-        y=balance_history,  # Y-axis for the loan balance over time (minimum payment)
-        mode='lines',
-        name=f"Loan Payoff: {name} (${balance:,.2f} @ {interest_rate}%) - Min Payment",
-        line=dict(color='royalblue', width=3)
-    ))
-
-    fig.add_trace(go.Scatter(
-        x=list(range(len(new_balance_history))),  # X-axis for months
-        y=new_balance_history,  # Y-axis for the loan balance over time (with extra payment)
-        mode='lines',
-        name=f"Loan Payoff: {name} (${balance:,.2f} @ {interest_rate}%) - Extra Payment",
-        line=dict(color='darkorange', width=3)
-    ))
-
-    # Customize the layout for a sleek appearance
-    fig.update_layout(
-        title="Simulated Loan Downpayment Over Time (With Extra Payments)",
-        xaxis_title="Months",
-        yaxis_title="Remaining Balance ($)",
-        template="plotly_dark",
-        hovermode="closest",
-        showlegend=True,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        width=1200,  # Increase width to make the graph wider
-        height=600,  # Increase height for a larger graph
-    )
-
-    # Add balance tooltips at 12-month intervals (every year)
+    # Add annotations for balance at 12-month intervals
     for month in range(0, loan_term_months + 1, 12):  # Every 12 months
-        fig.add_annotation(
-            x=month,
-            y=balance_history[month],
-            text=f"${balance_history[month]:,.2f}",
-            showarrow=True,
-            arrowhead=2,
-            arrowsize=1,
-            arrowcolor="white",
-            ax=0,
-            ay=-40,
-            font=dict(size=12, color="white")
-        )
+        ax.annotate(f"${balance_history[month]:,.2f}", 
+                    xy=(month, balance_history[month]), 
+                    xytext=(month, balance_history[month] * 1.05), 
+                    arrowprops=dict(arrowstyle="->", color="black"),
+                    fontsize=10, color="white", ha="center", va="center")
 
-    for month in range(0, len(new_balance_history), 12):  # Every 12 months
-        fig.add_annotation(
-            x=month,
-            y=new_balance_history[month],
-            text=f"${new_balance_history[month]:,.2f}",
-            showarrow=True,
-            arrowhead=2,
-            arrowsize=1,
-            arrowcolor="white",
-            ax=0,
-            ay=-40,
-            font=dict(size=12, color="white")
-        )
-
-    # Display graph
-    st.plotly_chart(fig)
+    st.pyplot(fig)
