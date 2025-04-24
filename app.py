@@ -145,7 +145,7 @@ with st.spinner("Calculating your loan details..."):
     loan_data_no_extra, _, _, months_taken_no_extra = calculate_amortization_no_extra(balance, interest_rate, loan_term_months)
 
     # Combine the two graphs into one plot using Plotly
-    st.subheader("Loan Balance Over Time (With and Without Extra Payments)")
+    st.subheader("Loan Balance Over Time")
     
     # Create the Plotly figure
     fig = go.Figure()
