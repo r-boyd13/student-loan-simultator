@@ -87,30 +87,21 @@ with st.spinner("Calculating your loan details..."):
     # Calculate amortization without extra payments for comparison
     loan_data_no_extra, _, _, months_taken_no_extra = calculate_amortization_no_extra(balance, interest_rate, loan_term_months)
 
-    # Impact of Extra Payment: Enhanced UX
-    if extra_payment > 0:
-        st.subheader(f"Impact of Extra Payments of **${extra_payment}** per Month")
-        extra_data, _, _, _ = calculate_amortization(balance, interest_rate, loan_term_months, extra_payment)
-        st.write(extra_data)
-        
-        # Plot the balance with extra payments
-        st.subheader("Loan Balance with Extra Payments")
-        plt.figure(figsize=(10, 6))
-        plt.plot(extra_data['Month'], extra_data['Balance'], label="Loan Balance with Extra Payments", color="green")
-        plt.title(f"{name} Loan Payoff Over Time (With Extra Payments)", fontsize=16)
-        plt.xlabel("Months", fontsize=12)
-        plt.ylabel("Loan Balance ($)", fontsize=12)
-        plt.grid(True)
-        plt.tight_layout()
-        st.pyplot(plt)
-
-    # Loan balance graph for standard loan (without extra payments)
-    st.subheader("Loan Balance Over Time (Without Extra Payments)")
+    # Combine the two graphs into one plot
+    st.subheader("Loan Balance Over Time (With and Without Extra Payments)")
     plt.figure(figsize=(10, 6))
-    plt.plot(loan_data_no_extra['Month'], loan_data_no_extra['Balance'], label="Loan Balance", color="blue")
+
+    # Plot loan balance with extra payments (green line)
+    plt.plot(loan_data['Month'], loan_data['Balance'], label="Loan Balance with Extra Payments", color="green", linestyle='-', linewidth=2)
+    
+    # Plot loan balance without extra payments (blue line)
+    plt.plot(loan_data_no_extra['Month'], loan_data_no_extra['Balance'], label="Loan Balance without Extra Payments", color="blue", linestyle='--', linewidth=2)
+
+    # Adding titles and labels
     plt.title(f"{name} Loan Payoff Over Time", fontsize=16)
     plt.xlabel("Months", fontsize=12)
     plt.ylabel("Loan Balance ($)", fontsize=12)
+    plt.legend()
     plt.grid(True)
     plt.tight_layout()
     st.pyplot(plt)
