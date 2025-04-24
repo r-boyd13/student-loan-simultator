@@ -6,7 +6,7 @@ import pandas as pd
 st.title("🎓 Student Loan Payoff Simulator")
 
 st.markdown("""
-Enter your loan details below. You will receive the minimum monthly payment, total interest paid, and a full amortization schedule along with a graph showing the loan payoff over time.
+Enter your loan details below. You will receive the minimum monthly payment, total interest paid, total principal, and a full amortization schedule along with a graph showing the loan payoff over time.
 """)
 
 # Loan input fields
@@ -29,19 +29,21 @@ def simulate_amortization_schedule(balance, rate, min_payment, term_months):
     months = term_months
     schedule = []
     total_interest = 0
+    total_principal = 0
 
     for month in range(months):
         interest = balance * r  # Calculate monthly interest
         principal = min_payment - interest  # Subtract interest from payment to calculate principal
         balance = max(0, balance - principal)  # Reduce balance by principal
         total_interest += interest  # Track total interest paid
+        total_principal += principal  # Track total principal paid
         schedule.append({
             "Month": month + 1,
             "Principal Payment": round(principal, 2),
             "Interest Payment": round(interest, 2),
             "Remaining Balance": round(balance, 2)
         })
-    return schedule, total_interest
+    return schedule, total_interest, total_principal
 
 # Simulate loan payoff over time for graph (show loan balance decrease)
 def simulate_downpayment_graph(balance, rate, min_payment, term_months):
@@ -61,12 +63,14 @@ def simulate_downpayment_graph(balance, rate, min_payment, term_months):
 if st.button("Run Simulation"):
     # Calculate the minimum payment and simulate payoff
     min_payment = calculate_min_payment(balance, interest_rate, loan_term_months)
-    amortization_schedule, total_interest = simulate_amortization_schedule(balance, interest_rate, min_payment, loan_term_months)
+    amortization_schedule, total_interest, total_principal = simulate_amortization_schedule(balance, interest_rate, min_payment, loan_term_months)
     balance_history = simulate_downpayment_graph(balance, interest_rate, min_payment, loan_term_months)
 
-    # Display the minimum monthly payment and total interest
+    # Display the minimum monthly payment, total interest, and total principal
     st.write(f"**Your minimum monthly payment**: ${min_payment:.2f}")
     st.write(f"**The amount of interest paid over the course of the loan**: ${total_interest:,.2f}")
+    st.write(f"**Total Principal Paid**: ${total_principal:,.2f}")
+    st.write(f"**Total Payments**: ${min_payment * loan_term_months:,.2f}")
 
     # Display amortization schedule as a table
     amortization_df = pd.DataFrame(amortization_schedule)
