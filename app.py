@@ -99,16 +99,16 @@ if st.button("Run Simulation"):
         if len(combined_balance_history) == 0:
             combined_balance_history = balance_history[:]
 
-        # Add this loan's balance history to the combined balance
-        if len(balance_history) == len(combined_balance_history):
-            combined_balance_history = [x + y for x, y in zip(combined_balance_history, balance_history)]
-        else:
-            # Handle case where the history lengths differ (by extending the shorter list with zeros)
+        # Make sure combined_balance_history and balance_history are the same length
+        if len(balance_history) != len(combined_balance_history):
+            # Extend the shorter list with zeros
             if len(balance_history) > len(combined_balance_history):
                 combined_balance_history.extend([0] * (len(balance_history) - len(combined_balance_history)))
             else:
                 balance_history.extend([0] * (len(combined_balance_history) - len(balance_history)))
-            combined_balance_history = [x + y for x, y in zip(combined_balance_history, balance_history)]
+
+        # Add this loan's balance history to the combined balance
+        combined_balance_history = [x + y for x, y in zip(combined_balance_history, balance_history)]
 
         # Display results for each loan
         st.subheader(f"Loan {i + 1} Results")
