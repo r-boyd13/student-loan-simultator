@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -63,54 +64,68 @@ def simulate_downpayment_graph(balance, rate, min_payment, term_months):
 
 # Run simulation when button is clicked
 if st.button("Run Simulation"):
-    # Initialize lists for all balance histories
-    all_balance_histories = []
-    combined_balance_history = []  # Initialize as empty list for combining histories
+    # Calculate the minimum payment and simulate payoff
+    min_payment = calculate_min_payment(balance, interest_rate, loan_term_months)
+    amortization_schedule, total_interest, total_principal = simulate_amortization_schedule(balance, interest_rate, min_payment, loan_term_months)
+    balance_history = simulate_downpayment_graph(balance, interest_rate, min_payment, loan_term_months)
 
-    # Simulate each loan payoff and calculate total combined balance
-    for i in range(1):
-        # Only one loan here for simplicity
-        balance = balance
-        interest_rate = interest_rate
-        loan_term_months = loan_term_months
+    # Calculate the estimated payoff date
+    current_date = datetime.today()
+    payoff_date = current_date + relativedelta(months=loan_term_months)
+    payoff_date_str = payoff_date.strftime('%m-%d-%Y')
 
-        # Calculate the standard payment and simulate payoff
-        min_payment = calculate_min_payment(balance, interest_rate, loan_term_months)
-        balance_history, total_interest, total_principal = simulate_amortization_schedule(balance, interest_rate, min_payment, loan_term_months)
-        all_balance_histories.append(balance_history)
+    # Display results in the new structure
+    st.write(f"**Minimum Monthly Payment**: ${min_payment:.2f}")
+    st.write(f"**Loan Payoff Date**: {payoff_date_str}")
+    st.write(f"**Total Payments**: ${min_payment * loan_term_months:,.2f}")
+    st.write(f"**Total Principal Paid**: ${total_principal:,.2f}")
+    st.write(f"**Total Interest Paid**: ${total_interest:,.2f}")
 
-        # Initialize combined_balance_history to match the first loan's history
-        if len(combined_balance_history) == 0:
-            combined_balance_history = [0] * len(balance_history)
+    # Display amortization schedule as a table
+    amortization_df = pd.DataFrame(amortization_schedule)
+    st.subheader("📊 Amortization Schedule")
+    st.write(amortization_df)
 
-        # Add this loan's balance history to the combined balance
-        combined_balance_history = [x + y for x, y in zip(combined_balance_history, balance_history)]
+    # Create interactive graph using Plotly
+    fig = go.Figure()
 
-        # Display results for each loan
-        st.subheader(f"Loan {i + 1} Results")
-        st.write(f"**Loan Name**: {name}")
-        st.write(f"**Your minimum monthly payment**: ${min_payment:.2f}")
-        st.write(f"**Total interest paid for {name}**: ${total_interest:,.2f}")
-        st.write(f"**Total principal paid for {name}**: ${total_principal:,.2f}")
-        st.write(f"**Total payments for {name}**: ${min_payment * loan_term_months:,.2f}")
+    # Plot loan balance decrease over time
+    fig.add_trace(go.Scatter(
+        x=list(range(loan_term_months + 1)),  # X-axis for months
+        y=balance_history,  # Y-axis for the loan balance over time
+        mode='lines',
+        name=f"Loan Payoff: {name} (${balance:,.2f} @ {interest_rate}%)",
+        line=dict(color='royalblue', width=3)
+    ))
 
-        # Display amortization schedule as a table for each loan
-        amortization_df = pd.DataFrame(balance_history, columns=["Month", "Remaining Balance"])
-        st.write(amortization_df)
+    # Customize the layout for a sleek appearance
+    fig.update_layout(
+        title="Simulated Loan Downpayment Over Time",
+        xaxis_title="Months",
+        yaxis_title="Remaining Balance ($)",
+        template="plotly_dark",
+        hovermode="closest",
+        showlegend=True,
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        width=1200,  # Increase width to make the graph wider
+        height=600,  # Increase height for a larger graph
+    )
 
-    # Plot all loan balances on the same graph
-    fig, ax = plt.subplots(figsize=(10, 6))
+    # Add balance tooltips at 12-month intervals (every year)
+    for month in range(0, loan_term_months + 1, 12):  # Every 12 months
+        fig.add_annotation(
+            x=month,
+            y=balance_history[month],
+            text=f"${balance_history[month]:,.2f}",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowcolor="white",
+            ax=0,
+            ay=-40,
+            font=dict(size=12, color="white")
+        )
 
-    # Plot each loan balance over time
-    for i in range(1):
-        ax.plot(all_balance_histories[i], label=f"{name} (${balance:,.2f} @ {interest_rate}%)")
-
-    # Plot combined balance
-    ax.plot(combined_balance_history, label="Combined Balance", color="black", linestyle="--", linewidth=2)
-
-    ax.set_title("Loan Balances with Proper 10-Year Amortization")
-    ax.set_xlabel("Month")
-    ax.set_ylabel("Remaining Balance ($)")
-    ax.legend()
-
-    st.pyplot(fig)
+    # Display graph
+    st.plotly_chart(fig)
