@@ -1,65 +1,36 @@
 import streamlit as st
-import numpy as np
-import matplotlib.pyplot as plt
 
 st.title("🎓 Student Loan Payoff Simulator")
 
 st.markdown("""
-Enter your loan details and payment strategy below. This app will show:
-- A projected payoff timeline
-- Interest paid with your strategy vs minimum payments
-- How much interest you could save 💰
+Enter your loan details below. You can add up to 10 loans and simulate your payments based on the standard 10-year repayment plan.
 """)
 
-# Loan inputs
-balance = st.number_input("Loan Balance ($)", value=10000)
-interest_rate = st.number_input("Interest Rate (%)", value=5.00)
-monthly_payment = st.number_input("Monthly Payment ($)", value=400)
+# Number of loans the user wants to input
+num_loans = st.number_input("How many loans do you have?", min_value=1, max_value=10, value=1)
 
-# Minimum payment calculation
-def calculate_min_payment(balance, rate, term_years=10):
-    r = rate / 100 / 12
-    n = term_years * 12
-    if r == 0:
-        return balance / n
-    return balance * r * (1 + r)**n / ((1 + r)**n - 1)
+# Initialize lists to store loan details
+loan_names = []
+loan_balances = []
+interest_rates = []
+min_payments = []
+loan_terms = []
 
-# Simulation
-def simulate_payoff(balance, rate, monthly_pay):
-    r = rate / 100 / 12
-    months = 0
-    total_interest = 0
-    balances = [balance]
-    
-    while balance > 0 and months < 600:  # Limit to 50 years
-        interest = balance * r
-        principal = monthly_pay - interest
-        if principal <= 0:
-            break  # Avoid infinite loop
-        balance = max(0, balance - principal)
-        total_interest += interest
-        balances.append(balance)
-        months += 1
-    
-    return months, total_interest, balances
+# Loop to create input fields for each loan
+for i in range(num_loans):
+    st.subheader(f"Loan {i + 1}")
+    name = st.text_input(f"Name of Loan {i + 1}", key=f"name_{i}")
+    balance = st.number_input(f"Balance for Loan {i + 1} ($)", min_value=0, value=10000, key=f"balance_{i}")
+    interest_rate = st.number_input(f"Interest Rate for Loan {i + 1} (%)", min_value=0.0, value=5.0, key=f"rate_{i}")
+    min_payment = st.number_input(f"Minimum Payment for Loan {i + 1} ($)", min_value=0, value=200, key=f"payment_{i}")
+    loan_term = st.number_input(f"Loan Term for Loan {i + 1} (Years)", min_value=1, max_value=30, value=10, key=f"term_{i}")
 
-# Run when button is clicked
-if st.button("Run Simulation"):
-    min_payment = calculate_min_payment(balance, interest_rate)
-    months_custom, interest_custom, bal_custom = simulate_payoff(balance, interest_rate, monthly_payment)
-    months_min, interest_min, _ = simulate_payoff(balance, interest_rate, min_payment)
+    # Store loan details in lists
+    loan_names.append(name)
+    loan_balances.append(balance)
+    interest_rates.append(interest_rate)
+    min_payments.append(min_payment)
+    loan_terms.append(loan_term)
 
-    st.subheader("📊 Results")
-    st.write(f"With your payment of ${monthly_payment:.2f}, your loan will be paid off in **{months_custom} months**.")
-    st.write(f"Total interest paid: **${interest_custom:,.2f}**")
-    st.write(f"If you paid the minimum (${min_payment:.2f}), you'd pay **${interest_min:,.2f}** in interest.")
-    st.success(f"You'd save **${interest_min - interest_custom:,.2f}** in interest by paying more!")
-
-    # Plot chart
-    fig, ax = plt.subplots()
-    ax.plot(bal_custom, label="Loan Balance")
-    ax.set_title("Payoff Timeline")
-    ax.set_xlabel("Month")
-    ax.set_ylabel("Balance ($)")
-    ax.grid(True)
-    st.pyplot(fig)
+# Placeholder for showing results (will update after next steps)
+st.write("Loan Details: ", loan_names, loan_balances, interest_rates, min_payments, loan_terms)
