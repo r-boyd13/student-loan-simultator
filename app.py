@@ -5,141 +5,102 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
+# Title
 st.title("🎓 Student Loan Payoff Simulator")
 
 st.markdown("""
 Enter your loan details below. You will receive the minimum monthly payment, total interest paid, total principal, and a full amortization schedule along with a graph showing the loan payoff over time.
 """)
 
-# Use Streamlit session state to store values and prevent reloading
-if 'min_payment' not in st.session_state:
-    st.session_state.min_payment = 0
-    st.session_state.balance_history = []
-    st.session_state.amortization_schedule = []
-    st.session_state.total_interest = 0
-    st.session_state.total_principal = 0
-    st.session_state.extra_payment = 0  # Store extra payment
-    st.session_state.new_payment = 0  # Store new payment after adding extra
-
 # Loan input fields
 name = st.text_input("Name of Loan", value="Loan 1")
 balance = st.number_input("Loan Balance ($)", min_value=0, value=20000)
 interest_rate = st.number_input("Interest Rate (%)", min_value=0.0, value=6.54)
 loan_term_months = st.number_input("Loan Term (Months)", min_value=1, max_value=360, value=120)  # Default to 120 months (10 years)
+extra_payment = st.number_input("Extra Payment ($)", min_value=0, value=0)  # Extra payment input
 
 # Calculate minimum payment (standard plan)
 def calculate_min_payment(balance, rate, term_months):
     r = rate / 100 / 12  # Monthly interest rate
-    n = term_months
-    if r == 0:
-        return balance / n
-    return balance * r * (1 + r)**n / ((1 + r)**n - 1)
+    n = term_months  # Loan term in months
+    min_payment = balance * (r * (1 + r)**n) / ((1 + r)**n - 1)  # Standard loan formula
+    return min_payment
 
-# Simulate loan payoff over time (calculate monthly breakdown)
-def simulate_amortization_schedule(balance, rate, min_payment, term_months):
+# Calculate loan amortization
+def calculate_amortization(balance, rate, term_months, extra_payment=0):
     r = rate / 100 / 12  # Monthly interest rate
-    months = term_months
-    schedule = []
-    total_interest = 0
-    total_principal = 0
-
-    for month in range(months):
-        interest = balance * r  # Calculate monthly interest
-        principal = min_payment - interest  # Subtract interest from payment to calculate principal
-        balance = max(0, balance - principal)  # Reduce balance by principal
-        total_interest += interest  # Track total interest paid
-        total_principal += principal  # Track total principal paid
-        schedule.append({
-            "Month": month + 1,
-            "Principal Payment": round(principal, 2),
-            "Interest Payment": round(interest, 2),
-            "Remaining Balance": round(balance, 2)
-        })
-    return schedule, total_interest, total_principal
-
-# Simulate loan payoff over time for graph (show loan balance decrease)
-def simulate_downpayment_graph(balance, rate, min_payment, term_months):
-    r = rate / 100 / 12  # Monthly interest rate
-    months = term_months
-    balance_history = [balance]
-
-    for month in range(months):
-        interest = balance * r  # Calculate monthly interest
-        principal = min_payment - interest  # Subtract interest from payment to calculate principal
-        balance = max(0, balance - principal)  # Reduce balance by principal
-        balance_history.append(balance)
+    min_payment = calculate_min_payment(balance, rate, term_months)
+    total_payment = min_payment + extra_payment
+    balance_remaining = balance
+    months = []
+    balances = []
+    principal_paid = []
+    interest_paid = []
     
-    return balance_history
+    for month in range(1, term_months + 1):
+        interest_for_month = balance_remaining * r
+        principal_for_month = total_payment - interest_for_month
+        balance_remaining -= principal_for_month
+        if balance_remaining < 0:
+            balance_remaining = 0
+        
+        months.append(month)
+        balances.append(balance_remaining)
+        principal_paid.append(principal_for_month)
+        interest_paid.append(interest_for_month)
+        
+        if balance_remaining <= 0:
+            break
+            
+    return pd.DataFrame({
+        'Month': months,
+        'Balance': balances,
+        'Principal Paid': principal_paid,
+        'Interest Paid': interest_paid
+    }), total_payment, balance_remaining
 
-# Form for dynamic input and updates
-with st.form(key='loan_form'):
-    extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0.0, value=0.0)
-    submit_button = st.form_submit_button("Calculate Payments")
+# Calculate and display the amortization table
+loan_data, total_payment, final_balance = calculate_amortization(balance, interest_rate, loan_term_months, extra_payment)
 
-    # Update session state with extra payment if form is submitted
-    if submit_button:
-        st.session_state.extra_payment = extra_payment
+# Display the table
+st.subheader(f"Loan Amortization Schedule for {name}")
+st.write(loan_data)
 
-# Run simulation when button is clicked or form is submitted
-if st.session_state.extra_payment is not None:
-    # Calculate the minimum payment and simulate payoff
-    min_payment = calculate_min_payment(balance, interest_rate, loan_term_months)
-    st.session_state.min_payment = min_payment  # Store in session state
+# Display total payment and final balance
+st.markdown(f"### Total Payment: ${total_payment:,.2f} per month")
+st.markdown(f"### Final Balance after {len(loan_data)} months: ${final_balance:,.2f}")
 
-    # Calculate amortization schedule and total payments
-    amortization_schedule, total_interest, total_principal = simulate_amortization_schedule(balance, interest_rate, min_payment, loan_term_months)
-    balance_history = simulate_downpayment_graph(balance, interest_rate, min_payment, loan_term_months)
+# Plot the loan balance over time
+st.subheader("Loan Balance Over Time")
+plt.figure(figsize=(10, 6))
+plt.plot(loan_data['Month'], loan_data['Balance'], label="Loan Balance", color="blue")
+plt.title(f"{name} Loan Payoff Over Time")
+plt.xlabel("Months")
+plt.ylabel("Loan Balance ($)")
+plt.grid(True)
+plt.tight_layout()
+st.pyplot(plt)
 
-    # Calculate the estimated payoff date for the minimum payment
-    current_date = datetime.today()
-    payoff_date = current_date + relativedelta(months=loan_term_months)
-    payoff_date_str = payoff_date.strftime('%m-%d-%Y')
-
-    # Display results for the minimum payment
-    st.write(f"**Minimum Monthly Payment**: ${min_payment:.2f}")
-    st.write(f"**Loan Payoff Date**: {payoff_date_str}")
-    st.write(f"**Total Payments**: ${min_payment * loan_term_months:,.2f}")
-    st.write(f"**Total Principal Paid**: ${total_principal:,.2f}")
-    st.write(f"**Total Interest Paid**: ${total_interest:,.2f}")
-
-    # Recalculate if extra payment is added
-    new_payment = min_payment + st.session_state.extra_payment
-    new_amortization_schedule, new_total_interest, new_total_principal = simulate_amortization_schedule(balance, interest_rate, new_payment, loan_term_months)
-    new_balance_history = simulate_downpayment_graph(balance, interest_rate, new_payment, loan_term_months)
-
-    # New payoff date based on increased payment
-    months_remaining = len(new_balance_history) - 1
-    new_payoff_date = current_date + relativedelta(months=months_remaining)
-    new_payoff_date_str = new_payoff_date.strftime('%m-%d-%Y')
-
-    # Display results with the new payment
-    st.subheader("📊 Results with Extra Payment")
-    st.write(f"**New Monthly Payment**: ${new_payment:.2f}")
-    st.write(f"**New Loan Payoff Date**: {new_payoff_date_str}")
-    st.write(f"**Total Payments**: ${new_payment * months_remaining:,.2f}")
-    st.write(f"**Total Principal Paid**: ${new_total_principal:,.2f}")
-    st.write(f"**Total Interest Paid**: ${new_total_interest:,.2f}")
-
-    # Display amortization schedule as a table for the increased payment
-    new_amortization_df = pd.DataFrame(new_amortization_schedule)
-    st.subheader("📊 Amortization Schedule with Extra Payments")
-    st.write(new_amortization_df)
-
-    # Create interactive graph using Matplotlib
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    # Plot loan balance decrease over time with both payment scenarios
-    balance_history = simulate_downpayment_graph(balance, interest_rate, min_payment, loan_term_months)
-    ax.plot(balance_history, label=f"Loan Payoff: {name} (${balance:,.2f} @ {interest_rate}%) - Min Payment", color="royalblue", linewidth=3)
+# Extra payment impact
+if extra_payment > 0:
+    st.subheader(f"Impact of Extra Payments of ${extra_payment} per Month")
+    extra_data, _, _ = calculate_amortization(balance, interest_rate, loan_term_months, extra_payment)
+    st.write(extra_data)
     
-    # Plot the new payment balance
-    new_balance_history = simulate_downpayment_graph(balance, interest_rate, new_payment, months_remaining)
-    ax.plot(new_balance_history, label=f"Loan Payoff: {name} (${balance:,.2f} @ {interest_rate}%) - Extra Payment", color="darkorange", linewidth=3)
+    # Plot the balance with extra payments
+    st.subheader("Loan Balance with Extra Payments")
+    plt.figure(figsize=(10, 6))
+    plt.plot(extra_data['Month'], extra_data['Balance'], label="Loan Balance with Extra Payments", color="green")
+    plt.title(f"{name} Loan Payoff Over Time (With Extra Payments)")
+    plt.xlabel("Months")
+    plt.ylabel("Loan Balance ($)")
+    plt.grid(True)
+    plt.tight_layout()
+    st.pyplot(plt)
 
-    ax.set_title("Simulated Loan Downpayment Over Time (With Extra Payments)")
-    ax.set_xlabel("Months")
-    ax.set_ylabel("Remaining Balance ($)")
-    ax.legend()
-    ax.grid(True)
-
-    st.pyplot(fig)
+# Conclusion and guidance
+if extra_payment > 0:
+    months_saved = len(loan_data) - len(extra_data)
+    st.markdown(f"### You would save **{months_saved} months** and reduce the total interest paid by making an extra payment of ${extra_payment} per month!")
+else:
+    st.markdown("### Consider adding extra payments to pay off your loan faster and reduce interest.")
