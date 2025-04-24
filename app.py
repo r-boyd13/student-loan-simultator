@@ -33,7 +33,7 @@ for i in range(num_loans):
 
 # Calculate minimum payment (standard plan)
 def calculate_min_payment(balance, rate, term_months):
-    r = rate / 100 / 12
+    r = rate / 100 / 12  # Monthly interest rate
     n = term_months
     if r == 0:
         return balance / n
@@ -41,21 +41,25 @@ def calculate_min_payment(balance, rate, term_months):
 
 # Simulate loan payoff over time
 def simulate_payoff(balance, rate, min_payment, term_months):
-    r = rate / 100 / 12
+    r = rate / 100 / 12  # Monthly interest rate
     months = term_months
     balance_history = [balance]
     total_interest = 0
     for month in range(months):
-        interest = balance * r
-        principal = min_payment - interest
-        balance = max(0, balance - principal)
+        interest = balance * r  # Calculate monthly interest
+        principal = min_payment - interest  # Subtract interest from payment to calculate principal
+        balance = max(0, balance - principal)  # Reduce balance by principal
         balance_history.append(balance)
-        total_interest += interest
+        total_interest += interest  # Track total interest paid
     return balance_history, total_interest
 
 # Run simulation when button is clicked
 if st.button("Run Simulation"):
-    # Simulate each loan payoff and display results
+    # Initialize lists for all balance histories
+    all_balance_histories = []
+    combined_balance_history = [0]  # Start with a 0 balance for combined
+
+    # Simulate each loan payoff and calculate total combined balance
     for i in range(num_loans):
         balance = loan_balances[i]
         interest_rate = interest_rates[i]
@@ -63,17 +67,35 @@ if st.button("Run Simulation"):
 
         # Calculate the standard payment and simulate payoff
         min_payment = calculate_min_payment(balance, interest_rate, loan_term_months)
-        balance_history, total_interest = simulate_payoff(balance, interest_rate, min_payment, loan_term_months)
+        balance_history, _ = simulate_payoff(balance, interest_rate, min_payment, loan_term_months)
         
-        # Plot loan balance over time
-        fig, ax = plt.subplots()
-        ax.plot(balance_history, label=f"Loan {i + 1}: {loan_names[i]}")
-        ax.set_title(f"Payoff Timeline for {loan_names[i]}")
-        ax.set_xlabel("Months")
-        ax.set_ylabel("Remaining Balance ($)")
-        ax.grid(True)
-        ax.legend()
+        # Append individual loan's balance history to combined balance
+        all_balance_histories.append(balance_history)
 
-        st.pyplot(fig)
-        st.write(f"Minimum monthly payment for {loan_names[i]}: ${min_payment:.2f}")
-        st.write(f"Total interest paid for {loan_names[i]}: ${total_interest:,.2f}")
+        # Add to combined balance history
+        combined_balance_history = [x + y for x, y in zip(combined_balance_history, balance_history)]
+
+    # Plot all loan balances on the same graph
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plot each loan balance over time
+    for i in range(num_loans):
+        ax.plot(all_balance_histories[i], label=f"{loan_names[i]} (${loan_balances[i]:,.2f} @ {interest_rates[i]}%)")
+
+    # Plot combined balance
+    ax.plot(combined_balance_history, label="Combined Balance", color="black", linestyle="--", linewidth=2)
+
+    ax.set_title("Loan Balances with Proper 10-Year Amortization")
+    ax.set_xlabel("Month")
+    ax.set_ylabel("Remaining Balance ($)")
+    ax.legend()
+
+    # Add data labels with loan name and interest rate
+    for i in range(num_loans):
+        ax.text(0, all_balance_histories[i][0], f"{loan_names[i]} ({interest_rates[i]}%)", fontsize=9, ha="center")
+
+    ax.grid(True)
+    st.pyplot(fig)
+
+    # Show total combined balance at the final point
+    st.write(f"Total combined balance of all loans at the end of the loan term: ${combined_balance_history[-1]:,.2f}")
