@@ -6,7 +6,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 # Set page configuration to use wide layout with no sidebar
-st.set_page_config(page_title="Student Loan Payoff Simulator", layout="wide")
+st.set_page_config(page_title="Student Loan Payoff Simulator", layout="centered")
 
 # Title and Description
 st.title("🎓 Student Loan Payoff Simulator")
@@ -19,13 +19,15 @@ This tool helps you estimate your student loan repayment schedule based on your 
 - A graph illustrating the impact of making extra payments
 """)
 
-# Loan input fields directly in the main content area
-st.subheader("Enter Loan Details")
-name = st.text_input("Name of Loan", value="Loan 1", help="Provide a name for your loan (e.g., 'Student Loan 1')")
-balance = st.number_input("Loan Balance ($)", min_value=0, value=20000, help="Total amount owed on the loan.")
-interest_rate = st.number_input("Interest Rate (%)", min_value=0.0, value=6.54, help="Annual interest rate of your loan.")
-loan_term_months = st.number_input("Loan Term (Months)", min_value=1, max_value=360, value=120, help="Loan term in months.")
-extra_payment = st.number_input("Extra Payment ($)", min_value=0, value=0, help="Monthly extra payment towards your loan.")
+# Create a container with a max width
+with st.container():
+    # Loan input fields directly in the main content area
+    st.subheader("Enter Loan Details")
+    name = st.text_input("Name of Loan", value="Loan 1", help="Provide a name for your loan (e.g., 'Student Loan 1')")
+    balance = st.number_input("Loan Balance ($)", min_value=0, value=20000, help="Total amount owed on the loan.")
+    interest_rate = st.number_input("Interest Rate (%)", min_value=0.0, value=6.54, help="Annual interest rate of your loan.")
+    loan_term_months = st.number_input("Loan Term (Months)", min_value=1, max_value=360, value=120, help="Loan term in months.")
+    extra_payment = st.number_input("Extra Payment ($)", min_value=0, value=0, help="Monthly extra payment towards your loan.")
 
 # Function to calculate minimum payment
 def calculate_min_payment(balance, rate, term_months):
@@ -107,7 +109,7 @@ with st.spinner("Calculating your loan details..."):
         xaxis_title="Months",
         yaxis_title="Loan Balance ($)",
         template="plotly_dark",
-        width=900,
+        width=800,  # Adjusted width
         height=500,
         legend_title="Loan Comparison",
     )
