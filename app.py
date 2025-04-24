@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 st.title("🎓 Student Loan Payoff Simulator")
 
 st.markdown("""
-Enter your loan details below. You can add up to 5 loans and simulate your payments based on the standard repayment plan (minimum payment over the term of the loan).
+Enter your loan details below. You will receive the minimum monthly payment, total interest paid, total principal, and a full amortization schedule along with a graph showing the loan payoff over time.
 """)
 
 # Default to 1 loan and allow adding more (up to 5)
