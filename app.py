@@ -30,7 +30,7 @@ with st.expander("Click to Learn the Calculation Logic"):
        The minimum monthly payment is calculated using the formula for an amortizing loan:
        
        \[
-       M = P \ times \ frac{r(1 + r)^n}{(1 + r)^n - 1}
+       PMT = P * (r(1+r)^n) / ((1+r)^n - 1)
        \]
        - Where:
          - \( M \) is the monthly payment.
