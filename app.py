@@ -8,8 +8,8 @@ st.markdown("""
 Enter your loan details below. You can add up to 5 loans and simulate your payments based on the standard repayment plan (minimum payment over the term of the loan).
 """)
 
-# Limit to 5 loans
-num_loans = 5
+# Default to 1 loan and allow adding more (up to 5)
+num_loans = st.number_input("How many loans do you have?", min_value=1, max_value=5, value=1)
 
 # Initialize lists to store loan details
 loan_names = []
@@ -46,7 +46,6 @@ def simulate_payoff(balance, rate, min_payment, term_months):
     balance_history = [balance]
     total_interest = 0
     interest_history = []  # Track interest at each month
-
     for month in range(months):
         interest = balance * r  # Calculate monthly interest
         principal = min_payment - interest  # Subtract interest from payment to calculate principal
