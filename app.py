@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 st.title("🎓 Student Loan Payoff Simulator")
 
 st.markdown("""
-Enter your loan details below. You can add up to 10 loans and simulate your payments based on the standard 10-year repayment plan.
+Enter your loan details below. You can add up to 10 loans and simulate your payments based on the standard repayment plan (minimum payment over the term of the loan).
 """)
 
 # Number of loans the user wants to input
@@ -16,7 +16,7 @@ loan_names = []
 loan_balances = []
 interest_rates = []
 min_payments = []
-loan_terms = []
+loan_terms_months = []  # Change from years to months
 
 # Loop to create input fields for each loan
 for i in range(num_loans):
@@ -25,34 +25,36 @@ for i in range(num_loans):
     balance = st.number_input(f"Balance for Loan {i + 1} ($)", min_value=0, value=10000, key=f"balance_{i}")
     interest_rate = st.number_input(f"Interest Rate for Loan {i + 1} (%)", min_value=0.0, value=5.0, key=f"rate_{i}")
     min_payment = st.number_input(f"Minimum Payment for Loan {i + 1} ($)", min_value=0, value=200, key=f"payment_{i}")
-    loan_term = st.number_input(f"Loan Term for Loan {i + 1} (Years)", min_value=1, max_value=30, value=10, key=f"term_{i}")
+    loan_term_months = st.number_input(f"Loan Term for Loan {i + 1} (Months)", min_value=1, max_value=360, value=120, key=f"term_{i}")  # Months instead of years
 
     # Store loan details in lists
     loan_names.append(name)
     loan_balances.append(balance)
     interest_rates.append(interest_rate)
     min_payments.append(min_payment)
-    loan_terms.append(loan_term)
+    loan_terms_months.append(loan_term_months)
 
 # Calculate minimum payment (standard 10-year plan)
-def calculate_min_payment(balance, rate, term_years=10):
+def calculate_min_payment(balance, rate, term_months):
     r = rate / 100 / 12
-    n = term_years * 12
+    n = term_months
     if r == 0:
         return balance / n
     return balance * r * (1 + r)**n / ((1 + r)**n - 1)
 
 # Simulate loan payoff over time
-def simulate_payoff(balance, rate, min_payment, term_years=10):
+def simulate_payoff(balance, rate, min_payment, term_months):
     r = rate / 100 / 12
-    months = term_years * 12
+    months = term_months
     balance_history = [balance]
+    total_interest = 0
     for month in range(months):
         interest = balance * r
         principal = min_payment - interest
         balance = max(0, balance - principal)
         balance_history.append(balance)
-    return balance_history
+        total_interest += interest
+    return balance_history, total_interest
 
 # Run simulation when button is clicked
 if st.button("Run Simulation"):
@@ -61,11 +63,10 @@ if st.button("Run Simulation"):
         balance = loan_balances[i]
         interest_rate = interest_rates[i]
         min_payment = min_payments[i]
-        loan_term = loan_terms[i]
+        loan_term_months = loan_terms_months[i]
 
-        # Calculate standard payment and simulate payoff
-        min_payment_calc = calculate_min_payment(balance, interest_rate, loan_term)
-        balance_history = simulate_payoff(balance, interest_rate, min_payment_calc, loan_term)
+        # Calculate the standard payment and simulate payoff
+        balance_history, total_interest = simulate_payoff(balance, interest_rate, min_payment, loan_term_months)
         
         # Plot loan balance over time
         fig, ax = plt.subplots()
@@ -77,4 +78,5 @@ if st.button("Run Simulation"):
         ax.legend()
 
         st.pyplot(fig)
-        st.write(f"Minimum monthly payment for {loan_names[i]}: ${min_payment_calc:.2f}")
+        st.write(f"Minimum monthly payment for {loan_names[i]}: ${min_payment:.2f}")
+        st.write(f"Total interest paid for {loan_names[i]}: ${total_interest:,.2f}")
