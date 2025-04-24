@@ -189,7 +189,3 @@ with st.spinner("Calculating your loan details..."):
         ### Consider adding extra payments to pay off your loan faster and reduce the total interest you pay over time.
         Even small monthly contributions can make a significant difference in the long run.
         """)
-
-# Footer with Link
-st.markdown("---")
-st.markdown("Created with ❤️ by [Your Name](https://yourwebsite.com)")
