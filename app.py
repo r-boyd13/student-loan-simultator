@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -89,24 +89,31 @@ with st.spinner("Calculating your loan details..."):
     # Calculate amortization without extra payments for comparison
     loan_data_no_extra, _, _, months_taken_no_extra = calculate_amortization_no_extra(balance, interest_rate, loan_term_months)
 
-    # Combine the two graphs into one plot
+    # Combine the two graphs into one plot using Plotly
     st.subheader("Loan Balance Over Time (With and Without Extra Payments)")
-    plt.figure(figsize=(10, 6))
+    
+    # Create the Plotly figure
+    fig = go.Figure()
 
     # Plot loan balance with extra payments (green line)
-    plt.plot(loan_data['Month'], loan_data['Balance'], label="Loan Balance with Extra Payments", color="green", linestyle='-', linewidth=2)
+    fig.add_trace(go.Scatter(x=loan_data['Month'], y=loan_data['Balance'], mode='lines', name='Loan Balance with Extra Payments', line=dict(color='green', width=2)))
     
     # Plot loan balance without extra payments (blue line)
-    plt.plot(loan_data_no_extra['Month'], loan_data_no_extra['Balance'], label="Loan Balance without Extra Payments", color="blue", linestyle='--', linewidth=2)
+    fig.add_trace(go.Scatter(x=loan_data_no_extra['Month'], y=loan_data_no_extra['Balance'], mode='lines', name='Loan Balance without Extra Payments', line=dict(color='blue', dash='dash', width=2)))
 
-    # Adding titles and labels
-    plt.title(f"{name} Loan Payoff Over Time", fontsize=16)
-    plt.xlabel("Months", fontsize=12)
-    plt.ylabel("Loan Balance ($)", fontsize=12)
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    st.pyplot(plt)
+    # Update layout
+    fig.update_layout(
+        title=f"{name} Loan Payoff Over Time",
+        xaxis_title="Months",
+        yaxis_title="Loan Balance ($)",
+        template="plotly_dark",
+        width=900,
+        height=500,
+        legend_title="Loan Comparison",
+    )
+
+    # Show the Plotly graph
+    st.plotly_chart(fig)
 
     # Conclusion and guidance
     if extra_payment > 0:
