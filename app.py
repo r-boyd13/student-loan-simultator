@@ -32,7 +32,7 @@ def calculate_min_payment(balance, rate, term_months):
     min_payment = balance * (r * (1 + r)**n) / ((1 + r)**n - 1)  # Standard loan formula
     return min_payment
 
-# Function to calculate loan amortization
+# Function to calculate loan amortization and track months taken
 def calculate_amortization(balance, rate, term_months, extra_payment=0):
     r = rate / 100 / 12  # Monthly interest rate
     min_payment = calculate_min_payment(balance, rate, term_months)
@@ -43,6 +43,8 @@ def calculate_amortization(balance, rate, term_months, extra_payment=0):
     principal_paid = []
     interest_paid = []
     
+    # Track the number of months to pay off the loan
+    month_count = 0
     for month in range(1, term_months + 1):
         interest_for_month = balance_remaining * r
         principal_for_month = total_payment - interest_for_month
@@ -56,19 +58,24 @@ def calculate_amortization(balance, rate, term_months, extra_payment=0):
         interest_paid.append(interest_for_month)
         
         if balance_remaining <= 0:
+            month_count = month
             break
-            
+    
     return pd.DataFrame({
         'Month': months,
         'Balance': balances,
         'Principal Paid': principal_paid,
         'Interest Paid': interest_paid
-    }), total_payment, balance_remaining
+    }), total_payment, balance_remaining, month_count
 
-# Calculate and display the amortization table
-loan_data, total_payment, final_balance = calculate_amortization(balance, interest_rate, loan_term_months, extra_payment)
+# Function to calculate loan amortization without extra payments
+def calculate_amortization_no_extra(balance, rate, term_months):
+    return calculate_amortization(balance, rate, term_months, extra_payment=0)
 
-# Display the table
+# Calculate and display the amortization table for standard loan
+loan_data, total_payment, final_balance, months_taken = calculate_amortization(balance, interest_rate, loan_term_months, extra_payment)
+
+# Display the table for the loan with extra payments
 st.subheader(f"Loan Amortization Schedule for {name}")
 st.write(loan_data)
 
@@ -76,10 +83,13 @@ st.write(loan_data)
 st.markdown(f"### Total Payment: **${total_payment:,.2f}** per month")
 st.markdown(f"### Final Balance after {len(loan_data)} months: **${final_balance:,.2f}**")
 
+# Calculate amortization without extra payments for comparison
+loan_data_no_extra, _, _, months_taken_no_extra = calculate_amortization_no_extra(balance, interest_rate, loan_term_months)
+
 # Impact of Extra Payment: Enhanced UX
 if extra_payment > 0:
     st.subheader(f"Impact of Extra Payments of **${extra_payment}** per Month")
-    extra_data, _, _ = calculate_amortization(balance, interest_rate, loan_term_months, extra_payment)
+    extra_data, _, _, _ = calculate_amortization(balance, interest_rate, loan_term_months, extra_payment)
     st.write(extra_data)
     
     # Plot the balance with extra payments
@@ -93,10 +103,10 @@ if extra_payment > 0:
     plt.tight_layout()
     st.pyplot(plt)
 
-# Loan balance graph
-st.subheader("Loan Balance Over Time")
+# Loan balance graph for standard loan (without extra payments)
+st.subheader("Loan Balance Over Time (Without Extra Payments)")
 plt.figure(figsize=(10, 6))
-plt.plot(loan_data['Month'], loan_data['Balance'], label="Loan Balance", color="blue")
+plt.plot(loan_data_no_extra['Month'], loan_data_no_extra['Balance'], label="Loan Balance", color="blue")
 plt.title(f"{name} Loan Payoff Over Time", fontsize=16)
 plt.xlabel("Months", fontsize=12)
 plt.ylabel("Loan Balance ($)", fontsize=12)
@@ -106,8 +116,10 @@ st.pyplot(plt)
 
 # Conclusion and guidance
 if extra_payment > 0:
-    months_saved = len(loan_data) - len(extra_data)
-    st.markdown(f"### By making extra payments of **${extra_payment}** per month, you would save **{months_saved} months** and reduce the total interest paid!")
+    months_saved = months_taken_no_extra - months_taken
+    total_interest_saved = loan_data_no_extra['Interest Paid'].sum() - loan_data['Interest Paid'].sum()
+    
+    st.markdown(f"### By making extra payments of **${extra_payment}** per month, you would save **{months_saved} months** and reduce the total interest paid by **${total_interest_saved:,.2f}**!")
 else:
     st.markdown("""
     ### Consider adding extra payments to pay off your loan faster and reduce the total interest you pay over time.
