@@ -5,11 +5,21 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
+# Title
 st.title("🎓 Student Loan Payoff Simulator")
 
+# Markdown instructions
 st.markdown("""
 Enter your loan details below. You will receive the minimum monthly payment, total interest paid, total principal, and a full amortization schedule along with a graph showing the loan payoff over time.
 """)
+
+# Use Streamlit session state to store values and prevent reloading
+if 'min_payment' not in st.session_state:
+    st.session_state.min_payment = 0
+    st.session_state.balance_history = []
+    st.session_state.amortization_schedule = []
+    st.session_state.total_interest = 0
+    st.session_state.total_principal = 0
 
 # Loan input fields
 name = st.text_input("Name of Loan", value="Loan 1")
@@ -61,12 +71,25 @@ def simulate_downpayment_graph(balance, rate, min_payment, term_months):
     
     return balance_history
 
-# Run simulation when button is clicked
-if st.button("Run Simulation"):
+# Form for dynamic input and updates
+with st.form(key='loan_form'):
+    extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0.0, value=0.0)
+    submit_button = st.form_submit_button("Calculate Payments")
+
+if submit_button:
     # Calculate the minimum payment and simulate payoff
     min_payment = calculate_min_payment(balance, interest_rate, loan_term_months)
+    st.session_state.min_payment = min_payment  # Store in session state
+
+    # Calculate amortization schedule and total payments
     amortization_schedule, total_interest, total_principal = simulate_amortization_schedule(balance, interest_rate, min_payment, loan_term_months)
     balance_history = simulate_downpayment_graph(balance, interest_rate, min_payment, loan_term_months)
+
+    # Store amortization data in session state
+    st.session_state.amortization_schedule = amortization_schedule
+    st.session_state.total_interest = total_interest
+    st.session_state.total_principal = total_principal
+    st.session_state.balance_history = balance_history
 
     # Calculate the estimated payoff date
     current_date = datetime.today()
@@ -80,13 +103,13 @@ if st.button("Run Simulation"):
     st.write(f"**Total Principal Paid**: ${total_principal:,.2f}")
     st.write(f"**Total Interest Paid**: ${total_interest:,.2f}")
 
-    # User input for extra monthly payment
-    extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0.0, value=0.0)
+    # Display amortization schedule as a table
+    amortization_df = pd.DataFrame(amortization_schedule)
+    st.subheader("📊 Amortization Schedule")
+    st.write(amortization_df)
 
-    # New monthly payment with extra payment
+    # Recalculate if extra payment is added
     new_payment = min_payment + extra_payment
-
-    # Simulate loan payoff with the new monthly payment
     new_amortization_schedule, new_total_interest, new_total_principal = simulate_amortization_schedule(balance, interest_rate, new_payment, loan_term_months)
     new_balance_history = simulate_downpayment_graph(balance, interest_rate, new_payment, loan_term_months)
 
