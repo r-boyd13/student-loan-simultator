@@ -8,8 +8,8 @@ st.markdown("""
 Enter your loan details below. You can add up to 5 loans and simulate your payments based on the standard repayment plan (minimum payment over the term of the loan).
 """)
 
-# Default to 1 loan and allow adding more (up to 5)
-num_loans = st.number_input("How many loans do you have?", min_value=1, max_value=5, value=1)
+# Limit to 5 loans
+num_loans = 5
 
 # Initialize lists to store loan details
 loan_names = []
@@ -45,21 +45,23 @@ def simulate_payoff(balance, rate, min_payment, term_months):
     months = term_months
     balance_history = [balance]
     total_interest = 0
+    interest_history = []  # Track interest at each month
     for month in range(months):
         interest = balance * r
         principal = min_payment - interest
         balance = max(0, balance - principal)
         balance_history.append(balance)
         total_interest += interest
-    return balance_history, total_interest
+        interest_history.append(total_interest)  # Track cumulative interest
+
+    return balance_history, total_interest, interest_history
 
 # Run simulation when button is clicked
 if st.button("Run Simulation"):
-    # Initialize lists for all balance histories
-    all_balance_histories = []
-    combined_balance_history = [0]  # Start with a 0 balance for combined
+    # Store results for all loans
+    loan_results = []
 
-    # Simulate each loan payoff and calculate total combined balance
+    # Simulate each loan payoff and display results
     for i in range(num_loans):
         balance = loan_balances[i]
         interest_rate = interest_rates[i]
@@ -67,35 +69,43 @@ if st.button("Run Simulation"):
 
         # Calculate the standard payment and simulate payoff
         min_payment = calculate_min_payment(balance, interest_rate, loan_term_months)
-        balance_history, _ = simulate_payoff(balance, interest_rate, min_payment, loan_term_months)
-        
-        # Append individual loan's balance history to combined balance
-        all_balance_histories.append(balance_history)
+        balance_history, total_interest, interest_history = simulate_payoff(balance, interest_rate, min_payment, loan_term_months)
 
-        # Add to combined balance history
-        combined_balance_history = [x + y for x, y in zip(combined_balance_history, balance_history)]
+        # Store results
+        loan_results.append({
+            "name": loan_names[i],
+            "balance": loan_balances[i],
+            "interest_rate": interest_rate,
+            "total_interest": total_interest,
+            "interest_history": interest_history
+        })
 
-    # Plot all loan balances on the same graph
+    # Sort loans by total interest (highest to lowest)
+    loan_results.sort(key=lambda x: x["total_interest"], reverse=True)
+
+    # Plot loan balances
     fig, ax = plt.subplots(figsize=(10, 6))
-
+    
     # Plot each loan balance over time
-    for i in range(num_loans):
-        ax.plot(all_balance_histories[i], label=f"{loan_names[i]} (${loan_balances[i]:,.2f} @ {interest_rates[i]}%)")
-
-    # Plot combined balance
-    ax.plot(combined_balance_history, label="Combined Balance", color="black", linestyle="--", linewidth=2)
-
+    for result in loan_results:
+        ax.plot(result["interest_history"], label=f"{result['name']} (${result['balance']:.2f} @ {result['interest_rate']}%)")
+    
+    # Plot combined balance (if necessary)
     ax.set_title("Loan Balances with Proper 10-Year Amortization")
     ax.set_xlabel("Month")
     ax.set_ylabel("Remaining Balance ($)")
     ax.legend()
-
-    # Add data labels with loan name and interest rate
-    for i in range(num_loans):
-        ax.text(0, all_balance_histories[i][0], f"{loan_names[i]} ({interest_rates[i]}%)", fontsize=9, ha="center")
-
     ax.grid(True)
+
     st.pyplot(fig)
 
-    # Show total combined balance at the final point
-    st.write(f"Total combined balance of all loans at the end of the loan term: ${combined_balance_history[-1]:,.2f}")
+    # Show sorted loan interest
+    for result in loan_results:
+        st.write(f"**{result['name']}** (Interest Rate: {result['interest_rate']}%)")
+        st.write(f"Total Interest: ${result['total_interest']:,.2f}")
+
+        # Breakdown of interest accumulated every 18 months
+        st.write("Interest Breakdown Every 18 Months:")
+        for i in range(0, len(result['interest_history']), 18):
+            month = i + 18
+            st.write(f"Month {month}: ${result['interest_history'][i]:,.2f}")
