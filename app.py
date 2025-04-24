@@ -118,8 +118,16 @@ st.pyplot(plt)
 if extra_payment > 0:
     months_saved = months_taken_no_extra - months_taken
     total_interest_saved = loan_data_no_extra['Interest Paid'].sum() - loan_data['Interest Paid'].sum()
-    
-    st.markdown(f"### By making extra payments of **${extra_payment}** per month, you would save **{months_saved} months** and reduce the total interest paid by **${total_interest_saved:,.2f}**!")
+
+    # Format the numbers with commas and two decimal places for better readability
+    months_saved_str = f"{months_saved} months" if months_saved > 0 else "no months"
+    total_interest_saved_str = f"${total_interest_saved:,.2f}"
+
+    st.markdown(f"""
+    ### By making extra payments of **${extra_payment}** per month:
+    - You would save **{months_saved_str}** and
+    - Reduce the total interest paid by **{total_interest_saved_str}**!
+    """)
 else:
     st.markdown("""
     ### Consider adding extra payments to pay off your loan faster and reduce the total interest you pay over time.
