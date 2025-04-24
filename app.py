@@ -19,6 +19,46 @@ This tool helps you estimate your student loan repayment schedule based on your 
 - A graph illustrating the impact of making extra payments
 """)
 
+# Add an expandable section for explaining the logic behind the calculations
+with st.expander("Click to Learn the Calculation Logic"):
+    st.markdown("""
+    The loan calculations are based on standard amortization formulas, which break down the repayment of your loan into fixed monthly payments of principal and interest.
+
+    ### Key Components of the Calculation:
+    
+    1. **Minimum Monthly Payment Calculation**:
+       The minimum monthly payment is calculated using the formula for an amortizing loan:
+       
+       \[
+       M = P \times \frac{r(1 + r)^n}{(1 + r)^n - 1}
+       \]
+       - Where:
+         - \( M \) is the monthly payment.
+         - \( P \) is the loan principal (balance).
+         - \( r \) is the monthly interest rate (annual interest rate divided by 12).
+         - \( n \) is the number of payments (loan term in months).
+
+    2. **Amortization Schedule**:
+       Each month, a portion of your payment goes towards interest, and the remaining amount reduces the principal balance. The loan balance decreases over time as more of the payment is applied towards the principal.
+
+    3. **Impact of Extra Payments**:
+       When extra payments are made:
+       - The **extra payment** is added to the principal reduction each month.
+       - This reduces the balance faster, which means less interest is paid over time.
+       - The **loan term** is shortened, and the payoff date is earlier than originally projected.
+
+    4. **Estimated Payoff Date**:
+       The payoff date is calculated by estimating when the balance will reach zero, considering the monthly payment and extra payments.
+
+    5. **Calculating Total Interest Paid**:
+       Total interest paid is calculated by summing up the interest portion of each monthly payment over the life of the loan.
+
+    ### What This Tool Does:
+    - **Loan Schedule**: It shows the breakdown of each month's principal and interest payments.
+    - **Payoff Date**: It estimates when the loan will be fully paid off, considering the regular and extra payments.
+    - **Visual Impact**: It plots how the loan balance decreases over time, showing the effect of extra payments on the loan term and total interest.
+    """)
+    
 # Loan input fields directly in the main content area
 st.subheader("Enter Loan Details")
 name = st.text_input("Name of Loan", value="Loan 1", help="Provide a name for your loan (e.g., 'Student Loan 1')")
