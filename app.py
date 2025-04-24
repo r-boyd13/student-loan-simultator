@@ -97,7 +97,7 @@ if st.button("Run Simulation"):
 
         # Initialize combined_balance_history to match the first loan's history
         if len(combined_balance_history) == 0:
-            combined_balance_history = [0] * len(balance_history)
+            combined_balance_history = balance_history[:]
 
         # Add this loan's balance history to the combined balance
         combined_balance_history = [x + y for x, y in zip(combined_balance_history, balance_history)]
