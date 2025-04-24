@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -100,11 +101,13 @@ if st.button("Run Simulation"):
         hovermode="closest",
         showlegend=True,
         plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)"
+        paper_bgcolor="rgba(0,0,0,0)",
+        width=1200,  # Increase width to make the graph wider
+        height=600,  # Increase height for a larger graph
     )
 
-    # Add balance tooltips at 6-month intervals
-    for month in range(0, loan_term_months + 1, 6):  # Every 6 months
+    # Add balance tooltips at 12-month intervals (every year)
+    for month in range(0, loan_term_months + 1, 12):  # Every 12 months
         fig.add_annotation(
             x=month,
             y=balance_history[month],
