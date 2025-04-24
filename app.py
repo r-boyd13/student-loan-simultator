@@ -1,8 +1,3 @@
-%%writefile requirements.txt
-streamlit
-matplotlib
-numpy
-
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,11 +31,11 @@ def simulate_payoff(balance, rate, monthly_pay):
     total_interest = 0
     balances = [balance]
     
-    while balance > 0 and months < 600:  # Limit to 50 years to prevent runaway
+    while balance > 0 and months < 600:  # Limit to 50 years
         interest = balance * r
         principal = monthly_pay - interest
         if principal <= 0:
-            break  # Infinite loop protection
+            break  # Avoid infinite loop
         balance = max(0, balance - principal)
         total_interest += interest
         balances.append(balance)
