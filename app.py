@@ -8,8 +8,8 @@ st.markdown("""
 Enter your loan details below. You can add up to 5 loans and simulate your payments based on the standard repayment plan (minimum payment over the term of the loan).
 """)
 
-# Limit to 5 loans
-num_loans = 5
+# Default to 1 loan and allow adding more (up to 5)
+num_loans = st.number_input("How many loans do you have?", min_value=1, max_value=5, value=1)
 
 # Initialize lists to store loan details
 loan_names = []
@@ -91,12 +91,19 @@ if st.button("Run Simulation"):
         ax.plot(result["interest_history"], label=f"{result['name']} (${result['balance']:.2f} @ {result['interest_rate']}%)")
     
     # Plot combined balance (if necessary)
+    combined_balance_history = [sum([r['interest_history'][i] for r in loan_results]) for i in range(len(loan_results[0]['interest_history']))]
+    ax.plot(combined_balance_history, label="Combined Balance", color="black", linestyle="--", linewidth=2)
+
     ax.set_title("Loan Balances with Proper 10-Year Amortization")
     ax.set_xlabel("Month")
     ax.set_ylabel("Remaining Balance ($)")
     ax.legend()
-    ax.grid(True)
 
+    # Add data labels with loan name and interest rate
+    for i in range(num_loans):
+        ax.text(0, loan_results[i]['interest_history'][0], f"{loan_results[i]['name']} ({loan_results[i]['interest_rate']}%)", fontsize=9, ha="center")
+
+    ax.grid(True)
     st.pyplot(fig)
 
     # Show sorted loan interest
