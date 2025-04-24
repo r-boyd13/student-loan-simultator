@@ -1,4 +1,6 @@
 import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
 
 st.title("🎓 Student Loan Payoff Simulator")
 
@@ -32,5 +34,47 @@ for i in range(num_loans):
     min_payments.append(min_payment)
     loan_terms.append(loan_term)
 
-# Placeholder for showing results (will update after next steps)
-st.write("Loan Details: ", loan_names, loan_balances, interest_rates, min_payments, loan_terms)
+# Calculate minimum payment (standard 10-year plan)
+def calculate_min_payment(balance, rate, term_years=10):
+    r = rate / 100 / 12
+    n = term_years * 12
+    if r == 0:
+        return balance / n
+    return balance * r * (1 + r)**n / ((1 + r)**n - 1)
+
+# Simulate loan payoff over time
+def simulate_payoff(balance, rate, min_payment, term_years=10):
+    r = rate / 100 / 12
+    months = term_years * 12
+    balance_history = [balance]
+    for month in range(months):
+        interest = balance * r
+        principal = min_payment - interest
+        balance = max(0, balance - principal)
+        balance_history.append(balance)
+    return balance_history
+
+# Run simulation when button is clicked
+if st.button("Run Simulation"):
+    # Simulate each loan payoff and display results
+    for i in range(num_loans):
+        balance = loan_balances[i]
+        interest_rate = interest_rates[i]
+        min_payment = min_payments[i]
+        loan_term = loan_terms[i]
+
+        # Calculate standard payment and simulate payoff
+        min_payment_calc = calculate_min_payment(balance, interest_rate, loan_term)
+        balance_history = simulate_payoff(balance, interest_rate, min_payment_calc, loan_term)
+        
+        # Plot loan balance over time
+        fig, ax = plt.subplots()
+        ax.plot(balance_history, label=f"Loan {i + 1}: {loan_names[i]}")
+        ax.set_title(f"Payoff Timeline for {loan_names[i]}")
+        ax.set_xlabel("Months")
+        ax.set_ylabel("Remaining Balance ($)")
+        ax.grid(True)
+        ax.legend()
+
+        st.pyplot(fig)
+        st.write(f"Minimum monthly payment for {loan_names[i]}: ${min_payment_calc:.2f}")
