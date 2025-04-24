@@ -48,16 +48,14 @@ def simulate_downpayment_graph(balance, rate, min_payment, term_months):
     r = rate / 100 / 12  # Monthly interest rate
     months = term_months
     balance_history = [balance]
-    remaining_balance_history = [balance]
 
     for month in range(months):
         interest = balance * r  # Calculate monthly interest
         principal = min_payment - interest  # Subtract interest from payment to calculate principal
         balance = max(0, balance - principal)  # Reduce balance by principal
         balance_history.append(balance)
-        remaining_balance_history.append(balance)
     
-    return remaining_balance_history
+    return balance_history
 
 # Run simulation when button is clicked
 if st.button("Run Simulation"):
@@ -77,25 +75,11 @@ if st.button("Run Simulation"):
 
     # Plot the simulated downpayment graph (loan balance over time)
     fig, ax = plt.subplots(figsize=(10, 6))
-
-    # Plot loan balance decrease over time
     ax.plot(balance_history, label=f"Loan Payoff: {name} (${balance:,.2f} @ {interest_rate}%)")
     ax.set_title("Simulated Loan Downpayment Over Time")
     ax.set_xlabel("Months")
     ax.set_ylabel("Remaining Balance ($)")
-
-    # Display remaining balance on x-axis at specific intervals (every 6 months)
-    month_intervals = list(range(0, loan_term_months + 1, 6))  # Every 6 months
-    balance_intervals = [balance_history[month] for month in month_intervals]
-    ax.set_xticks(month_intervals)  # Set x-axis ticks at 6-month intervals
-    ax.set_xticklabels([f"${balance:,.2f}" for balance in balance_intervals], rotation=45, ha="right")  # Show remaining balance at each interval
-
-    # Add grid and legend
     ax.grid(True)
     ax.legend()
-
-    # Display graph
+    
     st.pyplot(fig)
-
-    # Show total combined balance at the final point
-    st.write(f"Total combined balance of all loans at the end of the loan term: ${balance_history[-1]:,.2f}")
