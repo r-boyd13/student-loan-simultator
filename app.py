@@ -2,6 +2,8 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 st.title("🎓 Student Loan Payoff Simulator")
 
@@ -66,7 +68,7 @@ if st.button("Run Simulation"):
     amortization_schedule, total_interest, total_principal = simulate_amortization_schedule(balance, interest_rate, min_payment, loan_term_months)
     balance_history = simulate_downpayment_graph(balance, interest_rate, min_payment, loan_term_months)
 
-    # Display the minimum monthly payment, total interest, and total principal
+    # Display the minimum monthly payment and total interest
     st.write(f"**Your minimum monthly payment**: ${min_payment:.2f}")
     st.write(f"**The amount of interest paid over the course of the loan**: ${total_interest:,.2f}")
     st.write(f"**Total Principal Paid**: ${total_principal:,.2f}")
@@ -76,6 +78,14 @@ if st.button("Run Simulation"):
     amortization_df = pd.DataFrame(amortization_schedule)
     st.subheader("📊 Amortization Schedule")
     st.write(amortization_df)
+
+    # Calculate the estimated payoff date
+    current_date = datetime.today()
+    payoff_date = current_date + relativedelta(months=loan_term_months)
+    payoff_date_str = payoff_date.strftime('%m-%d-%Y')
+
+    # Display the payoff date
+    st.write(f"**Your loan will be fully paid off on {payoff_date_str}.**")
 
     # Plot the simulated downpayment graph (loan balance over time)
     fig, ax = plt.subplots(figsize=(10, 6))
