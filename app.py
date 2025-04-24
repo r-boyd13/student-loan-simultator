@@ -69,11 +69,17 @@ if st.button("Run Simulation"):
     amortization_schedule, total_interest, total_principal = simulate_amortization_schedule(balance, interest_rate, min_payment, loan_term_months)
     balance_history = simulate_downpayment_graph(balance, interest_rate, min_payment, loan_term_months)
 
-    # Display the minimum monthly payment and total interest
-    st.write(f"**Your minimum monthly payment**: ${min_payment:.2f}")
-    st.write(f"**The amount of interest paid over the course of the loan**: ${total_interest:,.2f}")
-    st.write(f"**Total Principal Paid**: ${total_principal:,.2f}")
+    # Calculate the estimated payoff date
+    current_date = datetime.today()
+    payoff_date = current_date + relativedelta(months=loan_term_months)
+    payoff_date_str = payoff_date.strftime('%m-%d-%Y')
+
+    # Display results in the new structure
+    st.write(f"**Minimum Monthly Payment**: ${min_payment:.2f}")
+    st.write(f"**Loan Payoff Date**: {payoff_date_str}")
     st.write(f"**Total Payments**: ${min_payment * loan_term_months:,.2f}")
+    st.write(f"**Total Principal Paid**: ${total_principal:,.2f}")
+    st.write(f"**Total Interest Paid**: ${total_interest:,.2f}")
 
     # Display amortization schedule as a table
     amortization_df = pd.DataFrame(amortization_schedule)
