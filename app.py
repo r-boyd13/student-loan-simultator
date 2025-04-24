@@ -84,11 +84,11 @@ if st.button("Run Simulation"):
     ax.set_xlabel("Months")
     ax.set_ylabel("Remaining Balance ($)")
 
-    # Add data labels every 6 months on the graph
-    for month in range(0, loan_term_months + 1, 6):  # Adding tooltips every 6 months
-        ax.annotate(f"${balance_history[month]:,.2f}", 
-                    (month, balance_history[month]),
-                    textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
+    # Display remaining balance on x-axis at specific intervals (every 6 months)
+    month_intervals = list(range(0, loan_term_months + 1, 6))  # Every 6 months
+    balance_intervals = [balance_history[month] for month in month_intervals]
+    ax.set_xticks(month_intervals)  # Set x-axis ticks at 6-month intervals
+    ax.set_xticklabels([f"${balance:,.2f}" for balance in balance_intervals], rotation=45, ha="right")  # Show remaining balance at each interval
 
     # Add grid and legend
     ax.grid(True)
@@ -96,3 +96,6 @@ if st.button("Run Simulation"):
 
     # Display graph
     st.pyplot(fig)
+
+    # Show total combined balance at the final point
+    st.write(f"Total combined balance of all loans at the end of the loan term: ${balance_history[-1]:,.2f}")
