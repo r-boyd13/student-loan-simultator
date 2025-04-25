@@ -3,11 +3,8 @@ import plotly.graph_objects as go
 import pandas as pd
 from utils.amortization import generate_amortization_schedule
 
-def plot_loan_timeline_plotly(df, loans):
+def plot_loan_timeline_plotly(df, loans, layout_mode="desktop"):
     fig = go.Figure()
-
-    # Group the dataframe by loan name and get first known balance + interest if available
-    grouped = df.groupby("Loan Name")
 
     for loan in loans:
         loan_name = loan["loan_name"]
@@ -24,22 +21,24 @@ def plot_loan_timeline_plotly(df, loans):
             name=label
         ))
 
+    font_size = 12 if layout_mode == "mobile" else 16
+    legend_size = 10 if layout_mode == "mobile" else 14
+    margins = dict(l=20, r=20, t=40, b=40) if layout_mode == "mobile" else dict(l=40, r=40, t=60, b=40)
+
     fig.update_layout(
         title="Loan Payoff Timeline",
         xaxis_title="Month",
         yaxis_title="Remaining Balance ($)",
         template="plotly_dark",
-        font=dict(size=16),
-        legend=dict(font=dict(size=14)),
-        margin=dict(l=40, r=40, t=60, b=40)
+        font=dict(size=font_size),
+        legend=dict(font=dict(size=legend_size)),
+        margin=margins
     )
     st.plotly_chart(fig, use_container_width=True)
 
-
-def plot_strategy_comparison_plotly(original_loans, strategy_df, extra_payment):
+def plot_strategy_comparison_plotly(original_loans, strategy_df, extra_payment, layout_mode="desktop"):
     fig = go.Figure()
 
-    # Baseline (Dashed)
     for loan in original_loans:
         df = generate_amortization_schedule(
             loan["loan_name"], loan["balance"], loan["interest_rate"], loan["term_months"]
@@ -53,7 +52,6 @@ def plot_strategy_comparison_plotly(original_loans, strategy_df, extra_payment):
             line=dict(dash='dash')
         ))
 
-    # Strategy (Solid)
     for loan_name in strategy_df["Loan Name"].unique():
         sub = strategy_df[strategy_df["Loan Name"] == loan_name]
         first_row = sub.iloc[0]
@@ -65,13 +63,17 @@ def plot_strategy_comparison_plotly(original_loans, strategy_df, extra_payment):
             name=label
         ))
 
+    font_size = 12 if layout_mode == "mobile" else 16
+    legend_size = 10 if layout_mode == "mobile" else 14
+    margins = dict(l=20, r=20, t=40, b=40) if layout_mode == "mobile" else dict(l=40, r=40, t=60, b=40)
+
     fig.update_layout(
         title="Aggressive vs. Minimum Payment",
         xaxis_title="Month",
         yaxis_title="Remaining Balance ($)",
         template="plotly_dark",
-        font=dict(size=16),
-        legend=dict(font=dict(size=14)),
-        margin=dict(l=40, r=40, t=60, b=40)
+        font=dict(size=font_size),
+        legend=dict(font=dict(size=legend_size)),
+        margin=margins
     )
     st.plotly_chart(fig, use_container_width=True)
