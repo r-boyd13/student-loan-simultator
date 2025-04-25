@@ -80,9 +80,7 @@ if loan_inputs:
         calculate_minimum_payment(l["balance"], l["interest_rate"], l["term_months"]) for l in loan_inputs
     )
     st.markdown(f"**💵 Combined Minimum Monthly Payment: ${total_min_payment:,.2f}**")
-
-    st.markdown("---")
-    st.markdown("### Do you have any extra money in your budget to apply toward your loans?")
+    st.markdown("Do you have any extra money in your budget to apply toward your loans?")
 
 # --- Step 2: Strategy Selection ---
 st.header("Step 2: Strategy Selection")
