@@ -56,7 +56,7 @@ if st.button("Simulate Repayment"):
     plot_loan_timeline(schedule_df)
 
     st.subheader("📉 Aggressive vs. Minimum Payment")
-    pplot_strategy_comparison(loan_inputs, schedule_df, extra_payment)
+    plot_strategy_comparison(loan_inputs, schedule_df, extra_payment)
 
     # Optional CSV export (future)
     # st.download_button("Download Schedule CSV", schedule_df.to_csv(), file_name="loan_schedule.csv")
