@@ -125,10 +125,10 @@ if st.button("Simulate Repayment"):
 
     # Charts
     st.subheader("📈 Loan Payoff Timeline")
-    plot_loan_timeline_plotly(schedule_df, loan_inputs)
+    plot_loan_timeline_plotly(schedule_df, loan_inputs, layout_mode=layout_mode)
 
     st.subheader("📉 Aggressive vs. Minimum Payment")
-    plot_strategy_comparison_plotly(loan_inputs, schedule_df, extra_payment)
+    plot_strategy_comparison_plotly(loan_inputs, schedule_df, extra_payment, layout_mode=layout_mode)
 
     # Optional CSV export (future)
     # st.download_button("Download Schedule CSV", schedule_df.to_csv(), file_name="loan_schedule.csv")
