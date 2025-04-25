@@ -38,6 +38,24 @@ for i in range(3):
 
 st.header("Step 2: Strategy Selection")
 
+# Show dynamic strategy description
+if strategy == "Avalanche":
+    st.markdown("""
+    **Avalanche Method:**  
+    This method focuses on paying off the **loan with the highest interest rate first**, while making minimum payments on the rest.  
+    It helps you **pay less in total interest** and become debt-free faster.  
+    Best for those who want to **maximize savings over time**.
+    """)
+elif strategy == "Snowball":
+    st.markdown("""
+    **Snowball Method:**  
+    This method pays off the **smallest loan balance first** to build momentum.  
+    It gives you quick wins and motivation early on, then rolls payments into the next loan.  
+    Best for those who prefer **psychological motivation** over strict efficiency.
+    """)
+else:
+    st.markdown("")
+
 extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0, value=150)
 strategy = st.selectbox("Repayment Strategy", options=["Avalanche"], index=0)
 
