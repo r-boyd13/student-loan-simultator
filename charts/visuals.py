@@ -1,40 +1,56 @@
-import matplotlib.pyplot as plt
-import pandas as pd
 import streamlit as st
+import plotly.graph_objects as go
+import pandas as pd
+from utils.amortization import generate_amortization_schedule
 
-def plot_loan_timeline(df):
-    grouped = df.groupby(["Loan Name", "Month"])["Remaining Balance"].max().reset_index()
-    fig, ax = plt.subplots(figsize=(12, 6))
-    for loan_name in grouped["Loan Name"].unique():
-        sub_df = grouped[grouped["Loan Name"] == loan_name]
-        ax.plot(sub_df["Month"], sub_df["Remaining Balance"], label=loan_name)
-    ax.set_title("Loan Payoff Timeline (All Loans)")
-    ax.set_xlabel("Month")
-    ax.set_ylabel("Remaining Balance ($)")
-    ax.grid(True)
-    ax.legend()
-    st.pyplot(fig)
+def plot_loan_timeline_plotly(df):
+    fig = go.Figure()
+    for loan_name in df["Loan Name"].unique():
+        sub_df = df[df["Loan Name"] == loan_name]
+        fig.add_trace(go.Scatter(
+            x=sub_df["Month"],
+            y=sub_df["Remaining Balance"],
+            mode='lines',
+            name=loan_name
+        ))
+    fig.update_layout(
+        title="Loan Payoff Timeline",
+        xaxis_title="Month",
+        yaxis_title="Remaining Balance ($)",
+        template="plotly_white"
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-def plot_strategy_comparison(original_loans, strategy_df, extra_payment):
-    from utils.amortization import generate_amortization_schedule
+def plot_strategy_comparison_plotly(original_loans, strategy_df, extra_payment):
+    fig = go.Figure()
 
-    fig, ax = plt.subplots(figsize=(12, 6))
-
-    # Plot baseline
+    # Baseline: Dashed lines
     for loan in original_loans:
         df = generate_amortization_schedule(
             loan["loan_name"], loan["balance"], loan["interest_rate"], loan["term_months"]
         )
-        ax.plot(df["Month"], df["Remaining Balance"], linestyle='--', label=f"{loan['loan_name']} (Min Payment)")
+        fig.add_trace(go.Scatter(
+            x=df["Month"],
+            y=df["Remaining Balance"],
+            mode='lines',
+            name=f"{loan['loan_name']} (Min Payment)",
+            line=dict(dash='dash')
+        ))
 
-    # Plot aggressive strategy results
+    # Strategy: Solid lines
     for loan_name in strategy_df["Loan Name"].unique():
         sub = strategy_df[strategy_df["Loan Name"] == loan_name]
-        ax.plot(sub["Month"], sub["Remaining Balance"], label=f"{loan_name} (Aggressive)")
+        fig.add_trace(go.Scatter(
+            x=sub["Month"],
+            y=sub["Remaining Balance"],
+            mode='lines',
+            name=f"{loan_name} (Aggressive)"
+        ))
 
-    ax.set_title("Aggressive vs. Minimum Payment")
-    ax.set_xlabel("Month")
-    ax.set_ylabel("Remaining Balance ($)")
-    ax.legend()
-    ax.grid(True)
-    st.pyplot(fig)
+    fig.update_layout(
+        title="Aggressive vs. Minimum Payment",
+        xaxis_title="Month",
+        yaxis_title="Remaining Balance ($)",
+        template="plotly_white"
+    )
+    st.plotly_chart(fig, use_container_width=True)
