@@ -10,33 +10,34 @@ st.markdown("Simulate your loan repayment plan, see how extra payments make a di
 
 st.header("Step 1: Enter Your Loan Details")
 
-# Initialize state for expand/collapse
+# Initialize expand/collapse state
 if "loan_expanded" not in st.session_state:
     st.session_state.loan_expanded = True
 
-# Styled expand/collapse bar
+# Styled expand/collapse controls
 with st.container():
     st.markdown(
         """
         <div style='display: flex; gap: 1rem; align-items: center; margin-bottom: 10px;'>
-            <form action="">
-                <button type="submit" name="expand" style="background-color: #1f77b4; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;" formmethod="post">🔼 Expand All Loan Fields</button>
+            <form>
+                <button type="submit" name="expand" style="background-color: #1f77b4; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">🔼 Expand All Loan Fields</button>
             </form>
-            <form action="">
-                <button type="submit" name="collapse" style="background-color: #d62728; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;" formmethod="post">🔽 Collapse All Loan Fields</button>
+            <form>
+                <button type="submit" name="collapse" style="background-color: #d62728; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">🔽 Collapse All Loan Fields</button>
             </form>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-# Set expand/collapse via query param buttons
-query_params = st.experimental_get_query_params()
+# Update state based on query params (modern method)
+query_params = st.query_params
 if "expand" in query_params:
     st.session_state.loan_expanded = True
 elif "collapse" in query_params:
     st.session_state.loan_expanded = False
 
+# Loan entry section
 num_loans = st.number_input("How many loans do you want to enter?", min_value=1, max_value=10, value=3)
 loan_inputs = []
 
@@ -59,7 +60,7 @@ for i in range(num_loans):
             "term_months": term
         })
 
-# --- Show Loan Summary Table ---
+# --- Loan Summary Table ---
 if loan_inputs:
     st.subheader("📋 Loan Summary")
     loan_summary = []
