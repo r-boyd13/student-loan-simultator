@@ -40,7 +40,7 @@ st.header("Step 2: Strategy Selection")
 
 strategy = st.selectbox("Repayment Strategy", options=["Avalanche"], index=0)
 
-# Immediately after that — dynamic explanation
+# Dynamic explanation
 if strategy == "Avalanche":
     st.markdown("""
     **Avalanche Method:**  
@@ -57,7 +57,6 @@ elif strategy == "Snowball":
     """)
 
 extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0, value=150)
-strategy = st.selectbox("Repayment Strategy", options=["Avalanche"], index=0)
 
 if st.button("Simulate Repayment"):
     st.success("Calculating your optimized repayment plan...")
