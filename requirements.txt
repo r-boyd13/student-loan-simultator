@@ -4,4 +4,5 @@ numpy
 matplotlib
 plotly
 streamlit-js-eval
+fpdf==1.7.2
 
