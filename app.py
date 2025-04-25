@@ -38,7 +38,9 @@ for i in range(3):
 
 st.header("Step 2: Strategy Selection")
 
-# Show dynamic strategy description
+strategy = st.selectbox("Repayment Strategy", options=["Avalanche"], index=0)
+
+# Immediately after that — dynamic explanation
 if strategy == "Avalanche":
     st.markdown("""
     **Avalanche Method:**  
@@ -53,8 +55,6 @@ elif strategy == "Snowball":
     It gives you quick wins and motivation early on, then rolls payments into the next loan.  
     Best for those who prefer **psychological motivation** over strict efficiency.
     """)
-else:
-    st.markdown("")
 
 extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0, value=150)
 strategy = st.selectbox("Repayment Strategy", options=["Avalanche"], index=0)
