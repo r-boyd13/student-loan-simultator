@@ -1,8 +1,10 @@
 import streamlit as st
+import pandas as pd
+import random
+
 from utils.amortization import calculate_minimum_payment, generate_amortization_schedule
 from utils.strategies import simulate_baseline, simulate_full_strategy
 from charts.visuals import plot_loan_timeline_plotly, plot_strategy_comparison_plotly
-import pandas as pd
 
 st.set_page_config(page_title="Student Loan Simulator", layout="wide")
 st.title("🎓 Student Loan Payoff Simulator")
@@ -22,20 +24,33 @@ with col_collapse:
     if st.button("🔽 Collapse All Loan Fields"):
         st.session_state.loan_expanded = False
 
+# Loan amount setup
 num_loans = st.number_input("How many loans do you want to enter?", min_value=1, max_value=10, value=3)
 loan_inputs = []
+
+# Generate random default loans
+def generate_random_loan(index):
+    return {
+        "name": f"Loan {chr(65 + index)}",
+        "balance": random.randint(5000, 40000),
+        "rate": round(random.uniform(2.0, 9.0), 2),
+        "term": 120  # keep this constant for simplicity
+    }
+
+# Store generated defaults
+default_loans = [generate_random_loan(i) for i in range(num_loans)]
 
 for i in range(num_loans):
     with st.expander(f"Loan {i + 1}", expanded=st.session_state.loan_expanded):
         cols = st.columns(4)
         with cols[0]:
-            loan_name = st.text_input(f"Loan Name {i}", value=f"Loan {chr(65+i)}", key=f"name_{i}")
+            loan_name = st.text_input(f"Loan Name {i}", value=default_loans[i]["name"], key=f"name_{i}")
         with cols[1]:
-            balance = st.number_input(f"Balance {i}", value=10000, min_value=0, key=f"balance_{i}")
+            balance = st.number_input(f"Balance {i}", value=default_loans[i]["balance"], min_value=0, key=f"balance_{i}")
         with cols[2]:
-            rate = st.number_input(f"Interest Rate {i}", value=5.0, min_value=0.0, key=f"rate_{i}")
+            rate = st.number_input(f"Interest Rate {i}", value=default_loans[i]["rate"], min_value=0.0, key=f"rate_{i}")
         with cols[3]:
-            term = st.number_input(f"Term {i}", value=120, min_value=1, max_value=360, key=f"term_{i}")
+            term = st.number_input(f"Term {i}", value=default_loans[i]["term"], min_value=1, max_value=360, key=f"term_{i}")
 
         loan_inputs.append({
             "loan_name": loan_name,
