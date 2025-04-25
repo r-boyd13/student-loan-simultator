@@ -10,24 +10,20 @@ st.markdown("Simulate your loan repayment plan, see how extra payments make a di
 
 st.header("Step 1: Enter Your Loan Details")
 
+num_loans = st.number_input("How many loans do you want to enter?", min_value=1, max_value=10, value=3)
 loan_inputs = []
-default_loans = [
-    {"name": "Loan A", "balance": 15000, "rate": 5.5, "term": 120},
-    {"name": "Loan B", "balance": 8000, "rate": 4.2, "term": 120},
-    {"name": "Loan C", "balance": 5000, "rate": 6.0, "term": 120},
-]
 
-for i in range(3):
+for i in range(num_loans):
     with st.expander(f"Loan {i + 1}", expanded=(i == 0)):
         cols = st.columns(4)
         with cols[0]:
-            loan_name = st.text_input(f"Name", value=default_loans[i]["name"], key=f"name_{i}")
+            loan_name = st.text_input(f"Name", value=f"Loan {chr(65+i)}", key=f"name_{i}")
         with cols[1]:
-            balance = st.number_input("Balance ($)", value=default_loans[i]["balance"], min_value=0, key=f"balance_{i}")
+            balance = st.number_input("Balance ($)", value=10000, min_value=0, key=f"balance_{i}")
         with cols[2]:
-            rate = st.number_input("Interest Rate (%)", value=default_loans[i]["rate"], min_value=0.0, key=f"rate_{i}")
+            rate = st.number_input("Interest Rate (%)", value=5.0, min_value=0.0, key=f"rate_{i}")
         with cols[3]:
-            term = st.number_input("Term (months)", value=default_loans[i]["term"], min_value=1, max_value=360, key=f"term_{i}")
+            term = st.number_input("Term (months)", value=120, min_value=1, max_value=360, key=f"term_{i}")
 
         loan_inputs.append({
             "loan_name": loan_name,
