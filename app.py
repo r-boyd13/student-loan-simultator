@@ -2,8 +2,9 @@ import streamlit as st
 st.set_page_config(page_title="Student Loan Simulator", layout="wide")  # MUST be first
 
 import pandas as pd
-import matplotlib.pyplot as plt
 from streamlit_js_eval import streamlit_js_eval
+import matplotlib.pyplot as plt
+
 from utils.amortization import calculate_minimum_payment, generate_amortization_schedule
 from utils.strategies import simulate_baseline, simulate_full_strategy
 
@@ -11,18 +12,12 @@ from utils.strategies import simulate_baseline, simulate_full_strategy
 screen_width = streamlit_js_eval(js_expressions="screen.width", key="screen_width")
 layout_mode = "mobile" if screen_width and screen_width < 700 else "desktop"
 
-# Track strategy and simulation trigger
-if "strategy" not in st.session_state:
-    st.session_state.strategy = "Avalanche"
-if "simulate_now" not in st.session_state:
-    st.session_state.simulate_now = False
-
 st.title("🎓 Student Loan Payoff Simulator")
 st.markdown("Simulate your loan repayment plan, see how extra payments make a difference, and visualize your path to debt freedom.")
 
 st.header("Step 1: Enter Your Loan Details")
 
-# Expand/Collapse all loan fields
+# Collapse/Expand control
 if "loan_expanded" not in st.session_state:
     st.session_state.loan_expanded = True
 
@@ -39,7 +34,11 @@ loan_inputs = []
 
 for i in range(num_loans):
     with st.expander(f"Loan {i + 1}", expanded=st.session_state.loan_expanded):
-        cols = [st.container() for _ in range(4)] if layout_mode == "mobile" else st.columns(4)
+        if layout_mode == "mobile":
+            cols = [st.container() for _ in range(4)]  # cleaner stacking for mobile
+        else:
+            cols = st.columns(4)
+
         with cols[0]:
             loan_name = st.text_input(f"Loan Name {i}", value=f"Loan {chr(65+i)}", key=f"name_{i}")
         with cols[1]:
@@ -48,6 +47,7 @@ for i in range(num_loans):
             rate = st.number_input(f"Interest Rate {i}", value=5.0, min_value=0.0, key=f"rate_{i}")
         with cols[3]:
             term = st.number_input(f"Term {i}", value=120, min_value=1, max_value=360, key=f"term_{i}")
+
         loan_inputs.append({
             "loan_name": loan_name,
             "balance": balance,
@@ -58,56 +58,62 @@ for i in range(num_loans):
 # --- Show Loan Summary Table ---
 if loan_inputs:
     st.subheader("📋 Loan Summary")
-    summary = []
+    loan_summary = []
     for loan in loan_inputs:
         min_payment = calculate_minimum_payment(loan["balance"], loan["interest_rate"], loan["term_months"])
-        summary.append({
+        loan_summary.append({
             "Loan Name": loan["loan_name"],
             "Balance ($)": f"${loan['balance']:,.2f}",
             "Interest Rate (%)": f"{loan['interest_rate']}%",
             "Term (months)": loan["term_months"],
             "Minimum Payment ($)": f"${min_payment:,.2f}"
         })
-    st.dataframe(pd.DataFrame(summary), use_container_width=True)
-    st.markdown(f"**💵 Combined Minimum Monthly Payment: ${sum(calculate_minimum_payment(l['balance'], l['interest_rate'], l['term_months']) for l in loan_inputs):,.2f}**")
+
+    df_summary = pd.DataFrame(loan_summary)
+    st.dataframe(df_summary, use_container_width=True)
+
+    total_min_payment = sum(
+        calculate_minimum_payment(l["balance"], l["interest_rate"], l["term_months"]) for l in loan_inputs
+    )
+    st.markdown(f"**💵 Combined Minimum Monthly Payment: ${total_min_payment:,.2f}**")
     st.markdown("### Do you have any extra money in your budget to apply toward your loans?")
 
 # --- Step 2: Strategy Selection ---
 st.header("Step 2: Strategy Selection")
 
-new_strategy = st.selectbox("Repayment Strategy", ["Avalanche", "Snowball"], index=0 if st.session_state.strategy == "Avalanche" else 1)
-if new_strategy != st.session_state.strategy:
-    st.session_state.strategy = new_strategy
-    st.session_state.simulate_now = True
-    st.experimental_rerun()
+strategy = st.selectbox("Repayment Strategy", options=["Avalanche", "Snowball"], index=0)
 
-if st.session_state.strategy == "Avalanche":
+# Dynamic explanation
+if strategy == "Avalanche":
     st.markdown("""
     **Avalanche Method:**  
-    This method focuses on paying off the **loan with the highest interest rate first**, while making minimum payments on the rest.
+    This method focuses on paying off the **loan with the highest interest rate first**, while making minimum payments on the rest.  
+    It helps you **pay less in total interest** and become debt-free faster.  
+    Best for those who want to **maximize savings over time**.
     """)
-else:
+elif strategy == "Snowball":
     st.markdown("""
     **Snowball Method:**  
-    This method pays off the **smallest loan balance first** to build momentum.
+    This method pays off the **smallest loan balance first** to build momentum.  
+    It gives you quick wins and motivation early on, then rolls payments into the next loan.  
+    Best for those who prefer **psychological motivation** over strict efficiency.
     """)
 
 extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0, value=150)
 
 if st.button("Simulate Repayment"):
-    st.session_state.simulate_now = True
-    st.experimental_rerun()
-
-# --- Simulation ---
-if st.session_state.simulate_now:
     st.success("Calculating your optimized repayment plan...")
+
+    # Baseline calculation
     baseline_interest, baseline_months, _ = simulate_baseline(loan_inputs)
+
+    # Strategy calculation
     strategy_loans = [loan.copy() for loan in loan_inputs]
-    schedule_df = simulate_full_strategy(strategy_loans, extra_payment, strategy=st.session_state.strategy.lower())
+    schedule_df = simulate_full_strategy(strategy_loans, extra_payment, strategy=strategy.lower())
     total_interest = schedule_df["Interest Paid"].sum()
     final_month = schedule_df["Month"].max()
 
-    # Results
+    # Summary
     st.subheader("📊 Summary Results")
     col1, col2 = st.columns(2)
     with col1:
@@ -117,7 +123,7 @@ if st.session_state.simulate_now:
         st.metric("Total Interest (Standard)", f"${baseline_interest:,.2f}")
         st.metric("Total Interest (Strategy)", f"${total_interest:,.2f}")
 
-    # Charts
+    # Charts - Matplotlib
     st.subheader("📈 Loan Payoff Timeline")
     fig, ax = plt.subplots(figsize=(10, 5))
     for loan in loan_inputs:
@@ -138,10 +144,12 @@ if st.session_state.simulate_now:
             loan["loan_name"], loan["balance"], loan["interest_rate"], loan["term_months"]
         )
         ax2.plot(base_df["Month"], base_df["Remaining Balance"], linestyle="--",
-                 label=f"{loan['loan_name']} - Min Payment")
+                 label=f"{loan['loan_name']} (${loan['balance']:,.0f} @ {loan['interest_rate']}%) - Min")
+
     for loan_name in schedule_df["Loan Name"].unique():
         sub = schedule_df[schedule_df["Loan Name"] == loan_name]
         ax2.plot(sub["Month"], sub["Remaining Balance"], label=f"{loan_name} (Strategy)")
+
     ax2.set_title("Aggressive vs. Minimum Payment")
     ax2.set_xlabel("Month")
     ax2.set_ylabel("Remaining Balance ($)")
@@ -149,4 +157,5 @@ if st.session_state.simulate_now:
     ax2.grid(True)
     st.pyplot(fig2)
 
-    st.session_state.simulate_now = False  # Reset flag
+    # Optional CSV export (future)
+    # st.download_button("Download Schedule CSV", schedule_df.to_csv(), file_name="loan_schedule.csv")
