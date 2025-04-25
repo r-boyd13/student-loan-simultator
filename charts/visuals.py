@@ -47,10 +47,14 @@ def plot_strategy_comparison_plotly(original_loans, strategy_df, extra_payment):
             name=f"{loan_name} (Aggressive)"
         ))
 
-    fig.update_layout(
-        title="Aggressive vs. Minimum Payment",
-        xaxis_title="Month",
-        yaxis_title="Remaining Balance ($)",
-        template="plotly_white"
-    )
+fig.update_layout(
+    title="Your Title",
+    xaxis_title="Month",
+    yaxis_title="Remaining Balance ($)",
+    template="plotly_dark",  # optional
+    font=dict(size=16),
+    legend=dict(font=dict(size=14)),
+    margin=dict(l=40, r=40, t=60, b=40)
+)
+
     st.plotly_chart(fig, use_container_width=True)
