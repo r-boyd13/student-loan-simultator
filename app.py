@@ -72,7 +72,7 @@ if loan_inputs:
 # --- Step 2: Strategy Selection ---
 st.header("Step 2: Strategy Selection")
 
-strategy = st.selectbox("Repayment Strategy", options=["Avalanche"], index=0)
+strategy = st.selectbox("Repayment Strategy", options=["Avalanche", "Snowball"], index=0)
 
 # Dynamic explanation
 if strategy == "Avalanche":
@@ -100,7 +100,7 @@ if st.button("Simulate Repayment"):
 
     # Strategy calculation
     strategy_loans = [loan.copy() for loan in loan_inputs]
-    schedule_df = simulate_full_strategy(strategy_loans, extra_payment, strategy="avalanche")
+    schedule_df = simulate_full_strategy(strategy_loans, extra_payment, strategy=strategy.lower())
     total_interest = schedule_df["Interest Paid"].sum()
     final_month = schedule_df["Month"].max()
 
