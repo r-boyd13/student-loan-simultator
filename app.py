@@ -2,6 +2,7 @@ import streamlit as st
 from utils.amortization import calculate_minimum_payment, generate_amortization_schedule
 from utils.strategies import simulate_baseline, simulate_full_strategy
 from charts.visuals import plot_loan_timeline_plotly, plot_strategy_comparison_plotly
+import pandas as pd
 
 st.set_page_config(page_title="Student Loan Simulator", layout="wide")
 st.title("🎓 Student Loan Payoff Simulator")
@@ -19,7 +20,6 @@ default_loans = [
 for i in range(3):
     with st.expander(f"Loan {i + 1}", expanded=(i == 0)):
         cols = st.columns(4)
-
         with cols[0]:
             loan_name = st.text_input(f"Name", value=default_loans[i]["name"], key=f"name_{i}")
         with cols[1]:
@@ -36,6 +36,32 @@ for i in range(3):
             "term_months": term
         })
 
+# --- Show Loan Summary Table ---
+if loan_inputs:
+    st.subheader("📋 Loan Summary")
+    loan_summary = []
+    for loan in loan_inputs:
+        min_payment = calculate_minimum_payment(loan["balance"], loan["interest_rate"], loan["term_months"])
+        loan_summary.append({
+            "Loan Name": loan["loan_name"],
+            "Balance ($)": f"${loan['balance']:,.2f}",
+            "Interest Rate (%)": f"{loan['interest_rate']}%",
+            "Term (months)": loan["term_months"],
+            "Minimum Payment ($)": f"${min_payment:,.2f}"
+        })
+
+    df_summary = pd.DataFrame(loan_summary)
+    st.dataframe(df_summary, use_container_width=True)
+
+    total_min_payment = sum(
+        calculate_minimum_payment(l["balance"], l["interest_rate"], l["term_months"]) for l in loan_inputs
+    )
+    st.markdown(f"**💵 Combined Minimum Monthly Payment: ${total_min_payment:,.2f}**")
+
+    st.markdown("---")
+    st.markdown("### Do you have any extra money in your budget to apply toward your loans?")
+
+# --- Step 2: Strategy Selection ---
 st.header("Step 2: Strategy Selection")
 
 strategy = st.selectbox("Repayment Strategy", options=["Avalanche"], index=0)
