@@ -3,22 +3,19 @@ import plotly.graph_objects as go
 import pandas as pd
 from utils.amortization import generate_amortization_schedule
 
-def plot_loan_timeline_plotly(df):
+def plot_loan_timeline_plotly(df, loans):
     fig = go.Figure()
 
     # Group the dataframe by loan name and get first known balance + interest if available
     grouped = df.groupby("Loan Name")
 
-    for loan_name, sub_df in grouped:
-        initial_balance = sub_df["Remaining Balance"].iloc[0]
-        
-        # Try to extract interest rate from loan_name if embedded
-        # If not, label with just name + balance
-        if "@" in loan_name:
-            label = f"{loan_name} (${initial_balance:,.0f})"
-        else:
-            # Default format if rate isn't embedded
-            label = f"{loan_name} (${initial_balance:,.0f})"
+    for loan in loans:
+        loan_name = loan["loan_name"]
+        balance = loan["balance"]
+        rate = loan["interest_rate"]
+
+        sub_df = df[df["Loan Name"] == loan_name]
+        label = f"{loan_name} (${balance:,.0f} @ {rate}%)"
 
         fig.add_trace(go.Scatter(
             x=sub_df["Month"],
