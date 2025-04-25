@@ -148,5 +148,47 @@ if st.session_state.simulate_now:
     ax2.legend()
     ax2.grid(True)
     st.pyplot(fig2)
+# --- Step 3: Repayment Checklist & PDF Export ---
+import io
+from fpdf import FPDF
+
+# Group payments by month
+grouped = schedule_df.groupby("Month")
+
+# Build the checklist content
+pdf = FPDF()
+pdf.add_page()
+pdf.set_font("Arial", size=12)
+pdf.cell(200, 10, txt="Loan Repayment Checklist", ln=True, align='C')
+pdf.ln(10)
+
+for month, payments in grouped:
+    pdf.set_font("Arial", 'B', size=12)
+    pdf.cell(200, 10, txt=f"Month {month}", ln=True)
+    pdf.set_font("Arial", size=11)
+
+    for _, row in payments.iterrows():
+        name = row["Loan Name"]
+        pay = f"${row['Payment']:,.2f}"
+        principal = f"${row['Principal Paid']:,.2f}"
+        interest = f"${row['Interest Paid']:,.2f}"
+        remaining = f"${row['Remaining Balance']:,.2f}"
+        line = f"• {name} → Payment: {pay} | Principal: {principal} | Interest: {interest} | Balance Left: {remaining}"
+        pdf.multi_cell(0, 8, txt=line)
+    pdf.ln(4)
+
+# Create buffer for PDF
+pdf_buffer = io.BytesIO()
+pdf.output(pdf_buffer)
+pdf_buffer.seek(0)
+
+# Download button
+st.subheader("📄 Repayment Checklist")
+st.download_button(
+    label="📥 Download Monthly Payment Checklist (PDF)",
+    data=pdf_buffer,
+    file_name="Loan_Repayment_Checklist.pdf",
+    mime="application/pdf"
+)
 
     st.session_state.simulate_now = False  # Reset flag
