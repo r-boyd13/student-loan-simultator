@@ -10,4 +10,4 @@ This tool allows users to simulate student loan repayment strategies using the a
 
 Built with Python and Streamlit.
 
-Live app: [https://student-loan-simulator.streamlit.app](https://student-loan-simulator.streamlit.app)
+Live app: https://student-loan-simultator-zw2h2ddrkxbe36os9362j7.streamlit.app/
