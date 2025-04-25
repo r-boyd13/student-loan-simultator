@@ -6,13 +6,6 @@ import matplotlib.pyplot as plt
 from streamlit_js_eval import streamlit_js_eval
 from utils.amortization import calculate_minimum_payment, generate_amortization_schedule
 from utils.strategies import simulate_baseline, simulate_full_strategy
-import io
-from fpdf import FPDF
-
-# --- Handle rerun flag immediately ---
-if st.session_state.get("simulate_now") and st.session_state.get("triggered_rerun") is None:
-    st.session_state.triggered_rerun = True
-    st.rerun()
 
 # Detect browser width and set layout mode
 screen_width = streamlit_js_eval(js_expressions="screen.width", key="screen_width")
@@ -103,7 +96,7 @@ extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0, value=
 
 if st.button("Simulate Repayment"):
     st.session_state.simulate_now = True
-    st.rerun()
+    st.experimental_rerun()
 
 # --- Simulation ---
 if st.session_state.simulate_now:
@@ -156,41 +149,4 @@ if st.session_state.simulate_now:
     ax2.grid(True)
     st.pyplot(fig2)
 
-    # --- Step 3: Repayment Checklist & PDF Export ---
-    grouped = schedule_df.groupby("Month")
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Loan Repayment Checklist", ln=True, align='C')
-    pdf.ln(10)
-
-    for month, payments in grouped:
-        pdf.set_font("Arial", 'B', size=12)
-        pdf.cell(200, 10, txt=f"Month {month}", ln=True)
-        pdf.set_font("Arial", size=11)
-        for _, row in payments.iterrows():
-            name = row["Loan Name"]
-            pay = f"${row['Payment']:,.2f}"
-            principal = f"${row['Principal Paid']:,.2f}"
-            interest = f"${row['Interest Paid']:,.2f}"
-            remaining = f"${row['Remaining Balance']:,.2f}"
-            line = f"- {name} -> Payment: {pay} | Principal: {principal} | Interest: {interest} | Balance Left: {remaining}"
-            safe_line = line.encode("latin-1", "replace").decode("latin-1")
-            pdf.multi_cell(0, 8, txt=safe_line)
-        pdf.ln(4)
-
-    pdf_buffer = io.BytesIO()
-    pdf.output(pdf_buffer)
-    pdf_buffer.seek(0)
-
-    st.subheader("📄 Repayment Checklist")
-    st.download_button(
-        label="📥 Download Monthly Payment Checklist (PDF)",
-        data=pdf_buffer,
-        file_name="Loan_Repayment_Checklist.pdf",
-        mime="application/pdf"
-    )
-
-    # Reset trigger
-    st.session_state.simulate_now = False
-    st.session_state.triggered_rerun = None
+    st.session_state.simulate_now = False  # Reset flag
