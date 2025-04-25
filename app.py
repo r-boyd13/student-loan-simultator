@@ -1,4 +1,6 @@
 import streamlit as st
+st.set_page_config(page_title="Student Loan Simulator", layout="wide")  # MUST be first
+
 import pandas as pd
 from streamlit_js_eval import streamlit_js_eval
 
