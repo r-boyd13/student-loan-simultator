@@ -8,13 +8,30 @@ st.set_page_config(page_title="Student Loan Simulator", layout="wide")
 st.title("🎓 Student Loan Payoff Simulator")
 st.markdown("Simulate your loan repayment plan, see how extra payments make a difference, and visualize your path to debt freedom.")
 
+import streamlit as st
+from utils.amortization import calculate_minimum_payment, generate_amortization_schedule
+from utils.strategies import simulate_baseline, simulate_full_strategy
+from charts.visuals import plot_loan_timeline_plotly, plot_strategy_comparison_plotly
+import pandas as pd
+
+st.set_page_config(page_title="Student Loan Simulator", layout="wide")
+st.title("🎓 Student Loan Payoff Simulator")
+st.markdown("Simulate your loan repayment plan, see how extra payments make a difference, and visualize your path to debt freedom.")
+
 st.header("Step 1: Enter Your Loan Details")
+
+# Collapse control
+if "collapse_loans" not in st.session_state:
+    st.session_state.collapse_loans = False
+
+if st.button("🔽 Collapse All Loan Fields"):
+    st.session_state.collapse_loans = True
 
 num_loans = st.number_input("How many loans do you want to enter?", min_value=1, max_value=10, value=3)
 loan_inputs = []
 
 for i in range(num_loans):
-    with st.expander(f"Loan {i + 1}", expanded=(i == 0)):
+    with st.expander(f"Loan {i + 1}", expanded=not st.session_state.get("collapse_loans", False)):
         cols = st.columns(4)
         with cols[0]:
             loan_name = st.text_input(f"Loan Name {i}", value=f"Loan {chr(65+i)}", key=f"name_{i}")
@@ -31,6 +48,9 @@ for i in range(num_loans):
             "interest_rate": rate,
             "term_months": term
         })
+
+# Reset collapse flag
+st.session_state.collapse_loans = False
 
 # --- Show Loan Summary Table ---
 if loan_inputs:
