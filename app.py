@@ -17,13 +17,13 @@ for i in range(num_loans):
     with st.expander(f"Loan {i + 1}", expanded=(i == 0)):
         cols = st.columns(4)
         with cols[0]:
-            loan_name = st.text_input(f"Name", value=f"Loan {chr(65+i)}", key=f"name_{i}")
+            loan_name = st.text_input(f"Loan Name {i}", value=f"Loan {chr(65+i)}", key=f"name_{i}")
         with cols[1]:
-            balance = st.number_input("Balance ($)", value=10000, min_value=0, key=f"balance_{i}")
+            balance = st.number_input(f"Balance {i}", value=10000, min_value=0, key=f"balance_{i}")
         with cols[2]:
-            rate = st.number_input("Interest Rate (%)", value=5.0, min_value=0.0, key=f"rate_{i}")
+            rate = st.number_input(f"Interest Rate {i}", value=5.0, min_value=0.0, key=f"rate_{i}")
         with cols[3]:
-            term = st.number_input("Term (months)", value=120, min_value=1, max_value=360, key=f"term_{i}")
+            term = st.number_input(f"Term {i}", value=120, min_value=1, max_value=360, key=f"term_{i}")
 
         loan_inputs.append({
             "loan_name": loan_name,
