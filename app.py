@@ -1,9 +1,14 @@
-
 import streamlit as st
+import pandas as pd
+from streamlit_js_eval import streamlit_js_eval
+
 from utils.amortization import calculate_minimum_payment, generate_amortization_schedule
 from utils.strategies import simulate_baseline, simulate_full_strategy
 from charts.visuals import plot_loan_timeline_plotly, plot_strategy_comparison_plotly
-import pandas as pd
+
+# Detect browser width and set layout mode
+screen_width = streamlit_js_eval(js_expressions="screen.width", key="screen_width")
+layout_mode = "mobile" if screen_width and screen_width < 700 else "desktop"
 
 st.set_page_config(page_title="Student Loan Simulator", layout="wide")
 st.title("🎓 Student Loan Payoff Simulator")
@@ -28,7 +33,10 @@ loan_inputs = []
 
 for i in range(num_loans):
     with st.expander(f"Loan {i + 1}", expanded=st.session_state.loan_expanded):
-        cols = st.columns(4)
+        if layout_mode == "mobile":
+            cols = [st] * 4  # simulate stacked layout
+        else:
+            cols = st.columns(4)
         with cols[0]:
             loan_name = st.text_input(f"Loan Name {i}", value=f"Loan {chr(65+i)}", key=f"name_{i}")
         with cols[1]:
