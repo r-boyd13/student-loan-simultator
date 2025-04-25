@@ -2,6 +2,9 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 from utils.amortization import generate_amortization_schedule
+import matplotlib
+matplotlib.use("Agg")  # Use non-interactive backend safe for Streamlit
+import matplotlib.pyplot as plt
 
 def plot_loan_timeline_plotly(df, loans, layout_mode="desktop"):
     fig = go.Figure()
