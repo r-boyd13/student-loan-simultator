@@ -4,9 +4,6 @@ st.set_page_config(page_title="Student Loan Simulator", layout="wide")  # MUST b
 import pandas as pd
 from streamlit_js_eval import streamlit_js_eval
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import RendererAgg
-import io
-_lock = RendererAgg.lock
 
 from utils.amortization import calculate_minimum_payment, generate_amortization_schedule
 from utils.strategies import simulate_baseline, simulate_full_strategy
@@ -126,40 +123,39 @@ if st.button("Simulate Repayment"):
         st.metric("Total Interest (Standard)", f"${baseline_interest:,.2f}")
         st.metric("Total Interest (Strategy)", f"${total_interest:,.2f}")
 
-    # Charts
-    import matplotlib.pyplot as plt
-    with _lock:
-        st.subheader("📈 Loan Payoff Timeline")
-        fig, ax = plt.subplots(figsize=(10, 5))
-        for loan in loan_inputs:
-            sub_df = schedule_df[schedule_df["Loan Name"] == loan["loan_name"]]
-            ax.plot(sub_df["Month"], sub_df["Remaining Balance"], label=f"{loan['loan_name']} (${loan['balance']:,.0f} @ {loan['interest_rate']}%)")
-        ax.set_title("Loan Payoff Timeline")
-        ax.set_xlabel("Month")
-        ax.set_ylabel("Remaining Balance ($)")
-        ax.legend()
-        ax.grid(True)
-        st.pyplot(fig)
+    # Charts - Matplotlib
+    st.subheader("📈 Loan Payoff Timeline")
+    fig, ax = plt.subplots(figsize=(10, 5))
+    for loan in loan_inputs:
+        sub_df = schedule_df[schedule_df["Loan Name"] == loan["loan_name"]]
+        ax.plot(sub_df["Month"], sub_df["Remaining Balance"],
+                label=f"{loan['loan_name']} (${loan['balance']:,.0f} @ {loan['interest_rate']}%)")
+    ax.set_title("Loan Payoff Timeline")
+    ax.set_xlabel("Month")
+    ax.set_ylabel("Remaining Balance ($)")
+    ax.legend()
+    ax.grid(True)
+    st.pyplot(fig)
 
-        st.subheader("📉 Aggressive vs. Minimum Payment")
-        fig2, ax2 = plt.subplots(figsize=(10, 5))
-        for loan in loan_inputs:
-            base_df = generate_amortization_schedule(
-                loan["loan_name"], loan["balance"], loan["interest_rate"], loan["term_months"]
-            )
-            ax2.plot(base_df["Month"], base_df["Remaining Balance"], linestyle="--",
-                     label=f"{loan['loan_name']} (${loan['balance']:,.0f} @ {loan['interest_rate']}%) - Min")
+    st.subheader("📉 Aggressive vs. Minimum Payment")
+    fig2, ax2 = plt.subplots(figsize=(10, 5))
+    for loan in loan_inputs:
+        base_df = generate_amortization_schedule(
+            loan["loan_name"], loan["balance"], loan["interest_rate"], loan["term_months"]
+        )
+        ax2.plot(base_df["Month"], base_df["Remaining Balance"], linestyle="--",
+                 label=f"{loan['loan_name']} (${loan['balance']:,.0f} @ {loan['interest_rate']}%) - Min")
 
-        for loan_name in schedule_df["Loan Name"].unique():
-            sub = schedule_df[schedule_df["Loan Name"] == loan_name]
-            ax2.plot(sub["Month"], sub["Remaining Balance"], label=f"{loan_name} (Strategy)")
+    for loan_name in schedule_df["Loan Name"].unique():
+        sub = schedule_df[schedule_df["Loan Name"] == loan_name]
+        ax2.plot(sub["Month"], sub["Remaining Balance"], label=f"{loan_name} (Strategy)")
 
-        ax2.set_title("Aggressive vs. Minimum Payment")
-        ax2.set_xlabel("Month")
-        ax2.set_ylabel("Remaining Balance ($)")
-        ax2.legend()
-        ax2.grid(True)
-        st.pyplot(fig2)
+    ax2.set_title("Aggressive vs. Minimum Payment")
+    ax2.set_xlabel("Month")
+    ax2.set_ylabel("Remaining Balance ($)")
+    ax2.legend()
+    ax2.grid(True)
+    st.pyplot(fig2)
 
     # Optional CSV export (future)
     # st.download_button("Download Schedule CSV", schedule_df.to_csv(), file_name="loan_schedule.csv")
