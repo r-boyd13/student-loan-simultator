@@ -12,7 +12,7 @@ from fpdf import FPDF
 # --- Handle rerun flag immediately ---
 if st.session_state.get("simulate_now") and st.session_state.get("triggered_rerun") is None:
     st.session_state.triggered_rerun = True
-    st.experimental_rerun()
+    st.rerun()
 
 # Detect browser width and set layout mode
 screen_width = streamlit_js_eval(js_expressions="screen.width", key="screen_width")
@@ -86,7 +86,7 @@ new_strategy = st.selectbox("Repayment Strategy", ["Avalanche", "Snowball"], ind
 if new_strategy != st.session_state.strategy:
     st.session_state.strategy = new_strategy
     st.session_state.simulate_now = True
-    st.experimental_rerun()
+    st.rerun()
 
 if st.session_state.strategy == "Avalanche":
     st.markdown("""
@@ -103,7 +103,7 @@ extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0, value=
 
 if st.button("Simulate Repayment"):
     st.session_state.simulate_now = True
-    st.experimental_rerun()
+    st.rerun()
 
 # --- Simulation ---
 if st.session_state.simulate_now:
