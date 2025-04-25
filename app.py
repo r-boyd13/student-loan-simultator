@@ -191,4 +191,4 @@ st.download_button(
     mime="application/pdf"
 )
 
-    st.session_state.simulate_now = False  # Reset flag
+st.session_state.simulate_now = False  # Reset flag
