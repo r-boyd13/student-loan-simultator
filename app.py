@@ -12,7 +12,6 @@ from charts.visuals import plot_loan_timeline_plotly, plot_strategy_comparison_p
 screen_width = streamlit_js_eval(js_expressions="screen.width", key="screen_width")
 layout_mode = "mobile" if screen_width and screen_width < 700 else "desktop"
 
-st.set_page_config(page_title="Student Loan Simulator", layout="wide")
 st.title("🎓 Student Loan Payoff Simulator")
 st.markdown("Simulate your loan repayment plan, see how extra payments make a difference, and visualize your path to debt freedom.")
 
@@ -36,9 +35,10 @@ loan_inputs = []
 for i in range(num_loans):
     with st.expander(f"Loan {i + 1}", expanded=st.session_state.loan_expanded):
         if layout_mode == "mobile":
-            cols = [st] * 4  # simulate stacked layout
+            cols = [st.container() for _ in range(4)]  # cleaner stacking for mobile
         else:
             cols = st.columns(4)
+
         with cols[0]:
             loan_name = st.text_input(f"Loan Name {i}", value=f"Loan {chr(65+i)}", key=f"name_{i}")
         with cols[1]:
