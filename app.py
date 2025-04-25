@@ -16,13 +16,24 @@ default_loans = [
     {"name": "Loan C", "balance": 5000, "rate": 6.0, "term": 120},
 ]
 
-for i in range(3):  # You can expand to 10 easily
+for i in range(3):
     with st.expander(f"Loan {i + 1}", expanded=(i == 0)):
-        loan_name = st.text_input(f"Name", value=default_loans[i]["name"], key=f"name_{i}")
-        balance = st.number_input("Balance ($)", value=default_loans[i]["balance"], min_value=0, key=f"balance_{i}")
-        rate = st.number_input("Interest Rate (%)", value=default_loans[i]["rate"], min_value=0.0, key=f"rate_{i}")
-        term = st.number_input("Term (months)", value=default_loans[i]["term"], min_value=1, max_value=360, key=f"term_{i}")
-        loan_inputs.append({"loan_name": loan_name, "balance": balance, "interest_rate": rate, "term_months": term})
+        cols = st.columns(4)
+        with cols[0]:
+            loan_name = st.text_input("Name", value=default_loans[i]["name"], key=f"name_{i}")
+        with cols[1]:
+            balance = st.number_input("Balance ($)", value=default_loans[i]["balance"], min_value=0, key=f"balance_{i}")
+        with cols[2]:
+            rate = st.number_input("Interest Rate (%)", value=default_loans[i]["rate"], min_value=0.0, key=f"rate_{i}")
+        with cols[3]:
+            term = st.number_input("Term (months)", value=default_loans[i]["term"], min_value=1, max_value=360, key=f"term_{i}")
+        loan_inputs.append({
+            "loan_name": loan_name,
+            "balance": balance,
+            "interest_rate": rate,
+            "term_months": term
+        })
+
 
 st.header("Step 2: Strategy Selection")
 
