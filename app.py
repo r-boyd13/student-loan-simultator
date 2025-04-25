@@ -103,7 +103,7 @@ extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0, value=
 
 if st.button("Simulate Repayment"):
     st.session_state.simulate_now = True
-    st.experimental_rerun()
+    st.rerun()
 
 # --- Simulation ---
 if st.session_state.simulate_now:
