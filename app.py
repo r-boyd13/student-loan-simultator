@@ -1,7 +1,7 @@
 import streamlit as st
 from utils.amortization import calculate_minimum_payment, generate_amortization_schedule
 from utils.strategies import simulate_baseline, simulate_full_strategy
-from charts.visuals import plot_loan_timeline, plot_strategy_comparison
+from charts.visuals import plot_loan_timeline_plotly, plot_strategy_comparison_plotly
 
 st.set_page_config(page_title="Student Loan Simulator", layout="wide")
 st.title("🎓 Student Loan Payoff Simulator")
@@ -53,10 +53,10 @@ if st.button("Simulate Repayment"):
 
     # Charts
     st.subheader("📈 Loan Payoff Timeline")
-    plot_loan_timeline(schedule_df)
+    plot_loan_timeline_plotly(schedule_df)
 
     st.subheader("📉 Aggressive vs. Minimum Payment")
-    plot_strategy_comparison(loan_inputs, schedule_df, extra_payment)
+    plot_strategy_comparison_plotly(loan_inputs, schedule_df, extra_payment)
 
     # Optional CSV export (future)
     # st.download_button("Download Schedule CSV", schedule_df.to_csv(), file_name="loan_schedule.csv")
