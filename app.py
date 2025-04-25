@@ -12,7 +12,7 @@ from fpdf import FPDF
 # --- Handle rerun flag immediately ---
 if st.session_state.get("simulate_now") and st.session_state.get("triggered_rerun") is None:
     st.session_state.triggered_rerun = True
-    st.experimental_rerun()
+    st.rerun()
 
 # Detect browser width and set layout mode
 screen_width = streamlit_js_eval(js_expressions="screen.width", key="screen_width")
