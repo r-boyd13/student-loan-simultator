@@ -27,11 +27,10 @@ def plot_strategy_comparison(original_loans, strategy_df, extra_payment):
         )
         ax.plot(df["Month"], df["Remaining Balance"], linestyle='--', label=f"{loan['loan_name']} (Min Payment)")
 
-    # Plot strategy
-    df = pd.concat(strategy_loans)
+    # Plot aggressive strategy results
     for loan_name in strategy_df["Loan Name"].unique():
-    sub = strategy_df[strategy_df["Loan Name"] == loan_name]
-    ax.plot(sub["Month"], sub["Remaining Balance"], label=f"{loan_name} (Aggressive)")
+        sub = strategy_df[strategy_df["Loan Name"] == loan_name]
+        ax.plot(sub["Month"], sub["Remaining Balance"], label=f"{loan_name} (Aggressive)")
 
     ax.set_title("Aggressive vs. Minimum Payment")
     ax.set_xlabel("Month")
