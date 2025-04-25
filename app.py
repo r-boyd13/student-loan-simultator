@@ -1,75 +1,62 @@
 import streamlit as st
-import pandas as pd
 from utils.amortization import calculate_minimum_payment, generate_amortization_schedule
-from utils.strategies import simulate_full_strategy
+from utils.strategies import simulate_baseline, simulate_full_strategy
 from charts.visuals import plot_loan_timeline, plot_strategy_comparison
 
 st.set_page_config(page_title="Student Loan Simulator", layout="wide")
 st.title("🎓 Student Loan Payoff Simulator")
+st.markdown("Simulate your loan repayment plan, see how extra payments make a difference, and visualize your path to debt freedom.")
 
-st.markdown("""
-Enter your student loan information below. You can simulate multiple loans, see a full amortization breakdown, and compare repayment strategies like Avalanche (highest interest first).
+st.header("Step 1: Enter Your Loan Details")
 
-This tool will show:
-- Your loan balances over time
-- When each loan is paid off
-- Total interest saved by paying extra monthly
-""")
+loan_inputs = []
+default_loans = [
+    {"name": "Loan A", "balance": 15000, "rate": 5.5, "term": 120},
+    {"name": "Loan B", "balance": 8000, "rate": 4.2, "term": 120},
+    {"name": "Loan C", "balance": 5000, "rate": 6.0, "term": 120},
+]
 
-# Step 1: Collect loan input
-tabs = st.tabs(["Loan Inputs", "Repayment Settings", "Results"])
+for i in range(3):  # You can expand to 10 easily
+    with st.expander(f"Loan {i + 1}", expanded=(i == 0)):
+        loan_name = st.text_input(f"Name", value=default_loans[i]["name"], key=f"name_{i}")
+        balance = st.number_input("Balance ($)", value=default_loans[i]["balance"], min_value=0, key=f"balance_{i}")
+        rate = st.number_input("Interest Rate (%)", value=default_loans[i]["rate"], min_value=0.0, key=f"rate_{i}")
+        term = st.number_input("Term (months)", value=default_loans[i]["term"], min_value=1, max_value=360, key=f"term_{i}")
+        loan_inputs.append({"loan_name": loan_name, "balance": balance, "interest_rate": rate, "term_months": term})
 
-with tabs[0]:
-    st.subheader("Enter Your Loans")
-    loan_data = []
+st.header("Step 2: Strategy Selection")
 
-    col1, col2, col3 = st.columns(3)
+extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0, value=150)
+strategy = st.selectbox("Repayment Strategy", options=["Avalanche"], index=0)
+
+if st.button("Simulate Repayment"):
+    st.success("Calculating your optimized repayment plan...")
+
+    # Baseline calculation
+    baseline_interest, baseline_months, _ = simulate_baseline(loan_inputs)
+
+    # Strategy calculation
+    strategy_loans = [loan.copy() for loan in loan_inputs]
+    schedule_df = simulate_full_strategy(strategy_loans, extra_payment, strategy="avalanche")
+    total_interest = schedule_df["Interest Paid"].sum()
+    final_month = schedule_df["Month"].max()
+
+    # Summary
+    st.subheader("📊 Summary Results")
+    col1, col2 = st.columns(2)
     with col1:
-        loan_names = [st.text_input(f"Loan {i+1} Name", f"Loan {chr(65+i)}") for i in range(3)]
+        st.metric("Interest Saved", f"${baseline_interest - total_interest:,.2f}")
+        st.metric("Time Saved", f"{baseline_months - final_month} months")
     with col2:
-        balances = [st.number_input(f"Balance {i+1} ($)", min_value=0.0, value=5000.0, step=500.0) for i in range(3)]
-    with col3:
-        rates = [st.number_input(f"Interest Rate {i+1} (%)", min_value=0.0, value=5.0, step=0.1) for i in range(3)]
+        st.metric("Total Interest (Standard)", f"${baseline_interest:,.2f}")
+        st.metric("Total Interest (Strategy)", f"${total_interest:,.2f}")
 
-    terms = [120] * 3  # 10-year default term
+    # Charts
+    st.subheader("📈 Loan Payoff Timeline")
+    plot_loan_timeline(schedule_df)
 
-    loans = [
-        {"loan_name": loan_names[i], "balance": balances[i], "interest_rate": rates[i], "term_months": terms[i]}
-        for i in range(3) if balances[i] > 0
-    ]
+    st.subheader("📉 Aggressive vs. Minimum Payment")
+    plot_strategy_comparison(loan_inputs, strategy_loans, extra_payment)
 
-with tabs[1]:
-    st.subheader("Repayment Strategy")
-    strategy = st.selectbox("Choose a strategy:", ["Avalanche"], index=0)
-    extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0.0, value=150.0, step=25.0)
-
-with tabs[2]:
-    if st.button("Simulate Repayment"):
-        # Run strategy simulation
-        tracked_loans = simulate_full_strategy(loans, extra_payment, strategy="avalanche")
-
-        # Display loan timeline chart
-        st.subheader("📈 Loan Payoff Timeline")
-        plot_loan_timeline(tracked_loans)
-
-        # Strategy comparison
-        st.subheader("📊 Minimum Payment vs. Aggressive Strategy")
-        plot_strategy_comparison(loans, extra_payment)
-
-        # Summary results
-        st.subheader("📊 Repayment Summary")
-        # Use amortization to compare baseline vs accelerated
-        total_interest_standard = sum(generate_amortization_schedule(
-            loan["loan_name"], loan["balance"], loan["interest_rate"], loan["term_months"]
-        )["Interest Paid"].sum() for loan in loans)
-
-        accelerated_df = pd.concat(tracked_loans.values())
-        total_interest_accelerated = accelerated_df["Remaining Balance"].diff(periods=-1).fillna(0).sum()
-
-        payoff_months = accelerated_df["Month"].max()
-        st.markdown(f"**Interest Saved:** ${total_interest_standard - total_interest_accelerated:,.2f}")
-        st.markdown(f"**Months to Payoff:** {int(payoff_months)}")
-        st.markdown(f"**Strategy Used:** {strategy}")
-
-st.markdown("---")
-st.caption("Built by Ryan | [GitHub Repo](https://github.com/r-boyd13/student-loan-simulator)")
+    # Optional CSV export (future)
+    # st.download_button("Download Schedule CSV", schedule_df.to_csv(), file_name="loan_schedule.csv")
