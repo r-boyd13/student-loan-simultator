@@ -5,13 +5,19 @@ from utils.amortization import generate_amortization_schedule
 
 def plot_loan_timeline_plotly(df):
     fig = go.Figure()
+
     for loan_name in df["Loan Name"].unique():
         sub_df = df[df["Loan Name"] == loan_name]
+        
+        # Extract initial balance and interest from the first row
+        initial_balance = sub_df["Remaining Balance"].iloc[0]
+        label = f"{loan_name} (${initial_balance:,.0f})"
+
         fig.add_trace(go.Scatter(
             x=sub_df["Month"],
             y=sub_df["Remaining Balance"],
             mode='lines',
-            name=loan_name
+            name=label
         ))
 
     fig.update_layout(
@@ -23,33 +29,36 @@ def plot_loan_timeline_plotly(df):
         legend=dict(font=dict(size=14)),
         margin=dict(l=40, r=40, t=60, b=40)
     )
-
     st.plotly_chart(fig, use_container_width=True)
+
 
 def plot_strategy_comparison_plotly(original_loans, strategy_df, extra_payment):
     fig = go.Figure()
 
-    # Baseline: Dashed lines
+    # Baseline (Dashed)
     for loan in original_loans:
         df = generate_amortization_schedule(
             loan["loan_name"], loan["balance"], loan["interest_rate"], loan["term_months"]
         )
+        label = f"{loan['loan_name']} (${loan['balance']:,.0f} @ {loan['interest_rate']}%) (Min Payment)"
         fig.add_trace(go.Scatter(
             x=df["Month"],
             y=df["Remaining Balance"],
             mode='lines',
-            name=f"{loan['loan_name']} (Min Payment)",
+            name=label,
             line=dict(dash='dash')
         ))
 
-    # Strategy: Solid lines
+    # Strategy (Solid)
     for loan_name in strategy_df["Loan Name"].unique():
         sub = strategy_df[strategy_df["Loan Name"] == loan_name]
+        first_row = sub.iloc[0]
+        label = f"{loan_name} (${first_row['Remaining Balance']:,.0f}) (Aggressive)"
         fig.add_trace(go.Scatter(
             x=sub["Month"],
             y=sub["Remaining Balance"],
             mode='lines',
-            name=f"{loan_name} (Aggressive)"
+            name=label
         ))
 
     fig.update_layout(
@@ -61,5 +70,4 @@ def plot_strategy_comparison_plotly(original_loans, strategy_df, extra_payment):
         legend=dict(font=dict(size=14)),
         margin=dict(l=40, r=40, t=60, b=40)
     )
-
     st.plotly_chart(fig, use_container_width=True)
