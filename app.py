@@ -10,11 +10,10 @@ st.markdown("Simulate your loan repayment plan, see how extra payments make a di
 
 st.header("Step 1: Enter Your Loan Details")
 
-# Initialize expand/collapse state
+# Collapse/Expand control
 if "loan_expanded" not in st.session_state:
     st.session_state.loan_expanded = True
 
-# Expand/Collapse toggle buttons - styled and side-by-side without page reload
 col_expand, col_collapse = st.columns([1, 1])
 with col_expand:
     if st.button("🔼 Expand All Loan Fields"):
@@ -23,15 +22,6 @@ with col_collapse:
     if st.button("🔽 Collapse All Loan Fields"):
         st.session_state.loan_expanded = False
 
-
-# Update state based on query params (modern method)
-query_params = st.query_params
-if "expand" in query_params:
-    st.session_state.loan_expanded = True
-elif "collapse" in query_params:
-    st.session_state.loan_expanded = False
-
-# Loan entry section
 num_loans = st.number_input("How many loans do you want to enter?", min_value=1, max_value=10, value=3)
 loan_inputs = []
 
@@ -54,7 +44,7 @@ for i in range(num_loans):
             "term_months": term
         })
 
-# --- Loan Summary Table ---
+# --- Show Loan Summary Table ---
 if loan_inputs:
     st.subheader("📋 Loan Summary")
     loan_summary = []
