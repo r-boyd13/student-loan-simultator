@@ -10,17 +10,16 @@ st.markdown("Simulate your loan repayment plan, see how extra payments make a di
 
 st.header("Step 1: Enter Your Loan Details")
 
-# Collapse/Expand control
-if "loan_expanded" not in st.session_state:
-    st.session_state.loan_expanded = True
-
-col_expand, col_collapse = st.columns([1, 1])
-with col_expand:
-    if st.button("🔼 Expand All Loan Fields"):
-        st.session_state.loan_expanded = True
-with col_collapse:
-    if st.button("🔽 Collapse All Loan Fields"):
-        st.session_state.loan_expanded = False
+# Expand/Collapse control - side by side with better layout
+st.write("")
+with st.container():
+    button_cols = st.columns([1, 1])
+    with button_cols[0]:
+        if st.button("🔼 Expand All Loan Fields"):
+            st.session_state.loan_expanded = True
+    with button_cols[1]:
+        if st.button("🔽 Collapse All Loan Fields"):
+            st.session_state.loan_expanded = False
 
 num_loans = st.number_input("How many loans do you want to enter?", min_value=1, max_value=10, value=3)
 loan_inputs = []
