@@ -1,3 +1,17 @@
+import pandas as pd
+from .amortization import calculate_minimum_payment, generate_amortization_schedule
+
+def simulate_baseline(loans):
+    total_interest = 0
+    max_month = 0
+    for loan in loans:
+        df = generate_amortization_schedule(
+            loan["loan_name"], loan["balance"], loan["interest_rate"], loan["term_months"]
+        )
+        total_interest += df["Interest Paid"].sum()
+        max_month = max(max_month, df["Month"].max())
+    return total_interest, max_month, None
+
 def simulate_full_strategy(loans, extra_payment, strategy="avalanche"):
     if strategy == "avalanche":
         loans = sorted(loans, key=lambda x: -x["interest_rate"])
